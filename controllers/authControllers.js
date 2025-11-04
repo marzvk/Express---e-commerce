@@ -29,7 +29,6 @@ exports.login_post = (req, res, next) => {
     })(req, res, next);
 };
 
-
 // LOGOUT
 // =================================
 exports.logout = (req, res, next) => {
@@ -59,7 +58,7 @@ exports.register_get = (req, res, next) => {
 // PROCESAR REGISTRO
 exports.register_post = async (req, res, next) => {
     const { username, email, password, password2, descripcion } = req.body;
-    
+
     let errors = [];
 
     // Validaciones

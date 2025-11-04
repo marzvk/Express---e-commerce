@@ -1,0 +1,67 @@
+extends ../layout
+
+block content
+  .container.mt-3
+    .row.mb-4
+      .col-md-8
+        h1 Gestión de Productos
+      .col-md-4.text-end
+        a.btn.btn-primary(href='/admin/products/create') + Nuevo Producto
+
+    if error_msg
+      .alert.alert-danger.alert-dismissible.fade.show(role='alert')
+        = error_msg
+        button.btn-close(type='button' data-bs-dismiss='alert')
+
+    if success_msg
+      .alert.alert-success.alert-dismissible.fade.show(role='alert')
+        = success_msg
+        button.btn-close(type='button' data-bs-dismiss='alert')
+
+    if products && products.length > 0
+      .table-responsive
+        table.table.table-hover
+          thead.table-dark
+            tr
+              th Título
+              th Precio
+              th Plataforma
+              th Stock
+              th Estado
+              th Acciones
+
+          tbody
+            each product in products
+              tr
+                td
+                  strong= product.title
+                td
+                  | $
+                  = product.price.toFixed(2)
+                td
+                  each platform in product.platform
+                    span.badge.bg-info.me-1= platform
+                td
+                  if product.stock > 10
+                    span.badge.bg-success= product.stock
+                  else if product.stock > 0
+                    span.badge.bg-warning= product.stock
+                  else
+                    span.badge.bg-danger Sin stock
+                td
+                  if product.featured
+                    span.badge.bg-primary Destacado
+                  else
+                    span.badge.bg-secondary Normal
+                td
+                  .btn-group(role='group')
+                    a.btn.btn-sm.btn-warning(href=`/admin/products/${product._id}/edit`)
+                      i.bi.bi-pencil
+                      |  Editar
+                    a.btn.btn-sm.btn-danger(href=`/admin/products/${product._id}/delete`)
+                      i.bi.bi-trash
+                      |  Eliminar
+    else
+      .alert.alert-info
+        p No hay productos. 
+          a(href='/admin/products/create') Crea uno nuevo

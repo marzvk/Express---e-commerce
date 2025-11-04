@@ -30,11 +30,10 @@ html(lang='es')
             li.nav-item
               a.nav-link(href='/users/profile') 
                 | 👤 #{user.username}
-            
-            //- Badge de admin (NUEVO)
+                        
             if user.isAdmin
               li.nav-item
-                span.nav-link.badge-admin ADMIN
+                a.nav-link.badge-admin(href='/admin') ADMIN
             
             li.nav-item
               //- Mantener tu formulario POST original

@@ -1,0 +1,36 @@
+extends ../layout
+
+block content
+  .container.my-1
+  h1.text-center.mb-2 Panel de Administración
+  
+  .row.g-4.mt-3
+    .col-12.col-sm-6
+      .card.text-center.shadow-sm.h-100
+        .card-body.py-4
+          h3.mb-2= stats.totalProducts
+          p.text-muted.mb-0 Total de Productos
+
+    .col-12.col-sm-6
+      .card.text-center.shadow-sm.h-100
+        .card-body.py-4
+          h3.mb-2= stats.activeProducts
+          p.text-muted.mb-0 Productos Activos
+
+    .col-12.col-sm-6
+      .card.text-center.shadow-sm.h-100
+        .card-body.py-4
+          h3.mb-2= stats.lowStock
+          p.text-muted.mb-0 Stock Bajo (<10)
+
+    .col-12.col-sm-6
+      .card.text-center.shadow-sm.h-100
+        .card-body.py-4
+          h3.mb-2= stats.outOfStock
+          p.text-danger.fw-semibold Sin Stock !!!
+
+  
+  .mt-5.text-center
+    h3.mb-4 Acciones Rápidas
+    a.btn.btn-primary.btn-lg.me-3.px-4.py-2(href='/admin/products') Ver Productos
+    a.btn.btn-success.btn-lg.px-4.py-2(href='/admin/products/create') Crear Producto

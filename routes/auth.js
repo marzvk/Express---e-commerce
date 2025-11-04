@@ -10,7 +10,9 @@ const {loginLimiter} = require("../middleware/auth")
 router.get('/login', auth_controller.login_get);
 
 // Post for login, procesar formulario login
-router.post('/login',loginLimiter, auth_controller.login_post);
+router.post('/login',
+    loginLimiter,
+     auth_controller.login_post);
 
 
 //  Logout
