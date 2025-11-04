@@ -1,0 +1,47 @@
+extends ../layout
+
+block content 
+
+  .container.mt-3 
+    .row.justify-content-center 
+      .col-md-8 
+        h1.mb-4= title 
+
+        if errors && errors.length > 0
+          .alert.alert-danger 
+            h5 Errores: 
+            ul.mb-0 
+              each error in errors 
+                li= error.msg
+
+        form(action=product ? `/admin/products/${product._id}/edit` : '/admin/products/create' , method="post")     
+          .mb-3 
+            label.form-label(for='title') Titulo 
+            input.form-control#title(
+                type="text"                
+                name='title'
+                value=product ? product.title : ''
+                required
+            )
+
+          .mb-3 
+            label.form-label(for='description') Descripcion 
+            textarea.form-control#description(
+                name="description"
+                rows='5'
+                required
+            )=product ? product.description : ''
+
+          .row 
+            .col-md-6 
+              .mb-3 
+                label.form-label(for="price") Precio 
+                input.form-control#price(
+                    type="number"
+                    name='price'
+                    step='0.01'
+                    min='0'
+                    value=product ? product.price : ''
+                    required
+                )        
+
