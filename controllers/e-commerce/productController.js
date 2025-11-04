@@ -257,3 +257,75 @@ exports.product_update_post = async (req, res, next) => {
     }
 };
 
+
+
+// ========================================
+// CONFIRMACIÓN ELIMINAR PRODUCTO (GET)
+// ========================================
+exports.product_delete_get = async (req, res, next) => {
+    try {
+        const product = await Product.findById(req.params.id);
+
+        if (!product) {
+            req.flash('error_msg', 'Producto no encontrado');
+            return res.redirect('/admin/products');
+        }
+
+        res.render('admin/product_delete_confirm', {
+            title: 'Confirmar Eliminación',
+            product: product
+        });
+    } catch (err) {
+        return next(err);
+    }
+};
+
+// ========================================
+// ELIMINAR PRODUCTO (POST)
+// ========================================
+exports.product_delete_post = async (req, res, next) => {
+    try {
+        const product = await Product.findById(req.params.id);
+
+        if (!product) {
+            req.flash('error_msg', 'Producto no encontrado');
+            return res.redirect('/admin/products');
+        }
+
+        await Product.findByIdAndDelete(req.params.id);
+
+        req.flash('success_msg', `Producto "${product.title}" eliminado exitosamente`);
+        res.redirect('/admin/products');
+
+    } catch (err) {
+        console.error(err);
+        req.flash('error_msg', 'Error al eliminar el producto');
+        res.redirect('/admin/products');
+    }
+};
+
+
+
+// ========================================
+// DASHBOARD ADMIN (básico, estadisticas)
+// ========================================
+exports.admin_dashboard = async (req, res, next) => {
+    try {
+        const totalProducts = await Product.countDocuments();
+        const activeProducts = await Product.countDocuments({ active: true });
+        const lowStock = await Product.countDocuments({ stock: { $lt: 10 } });
+        const outOfStock = await Product.countDocuments({ stock: 0 });
+
+        res.render('admin/dashboard', {
+            title: 'Panel de Administración',
+            stats: {
+                totalProducts,
+                activeProducts,
+                lowStock,
+                outOfStock
+            }
+        });
+    } catch (err) {
+        return next(err);
+    }
+};
