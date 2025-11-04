@@ -136,12 +136,14 @@ var usersRouter = require('./routes/users');
 var aboutRouter = require('./routes/about');
 var postsRouter = require('./routes/posts');
 var loginRouter = require('./routes/auth');
+const adminRoutes = require('./routes/e-commerce/admin');
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/about', aboutRouter);
 app.use('/posts', postsRouter);
 app.use('/auth', loginRouter);
+app.use('/admin', adminRoutes);
 
 
 // ========================================
