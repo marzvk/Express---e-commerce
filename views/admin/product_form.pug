@@ -45,3 +45,99 @@ block content
                     required
                 )        
 
+            .col-md-6 
+              .mb-3 
+                label.form-label(for="discount") Descuento (%)
+                input.form-control#discount(
+                  type="number"
+                  name="discount"
+                  min='0'
+                  max='99'
+                  value=product ? product.discount : '0'
+                )
+
+          .mb-3 
+            label.form-label Plataformas 
+            .form-check 
+              each plataform in ['PC', 'Steam', 'Epic', 'Origin', 'GOG', 'Uplay', 'Xbox', 'PlayStation', 'Nintendo']
+                .form-check 
+                  input.form-check-input(
+                    type="checkbox"
+                    id=`platform_${plataform}`
+                    name='platform'
+                    value=plataform 
+                    checked=product && product.platform.includes(plataform)
+                  )
+                  label.form-check-label(for=`platform_${plataform}`)= plataform 
+
+          .mb-3
+            label.form-label(for="genre") Generos 
+            select.form-select#genre(
+              name='genre'
+              multiple
+            )
+              each g in ['Action', 'RPG', 'Strategy', 'Adventure', 'Shooter', 'Sports', 'Racing', 'Indie', 'Simulation']
+                option(value=g selected=product && product.genre.includes(g))= g 
+
+          .row 
+            .col-md-6 
+              .mb-3 
+                label.form-label(for='publisher') Publicador 
+                input.form-control#publisher(
+                  type='text'
+                  name='publisher'
+                  value= product ? product.publisher : ''
+                )
+
+            .col-md-6
+              .mb-3 
+                label.form-label(for='developer') Desarrollador 
+                input.form-control#developer(
+                  type="text"
+                  name='developer'
+                  value= product ? product.developer : ''
+                )
+
+          .row 
+            .col-md-6 
+              .mb-3 
+                label.form-label(for="releaseDate") Fecha de lanzamiento 
+                input.form-control#releaseDate(
+                  type='date'
+                  name='releaseDate'
+                  value=(product ? (product.releaseDate ? product.releaseDate.toISOString().split('T')[0] : '') : '')
+                )     
+
+            .col-md-6 
+              .mb-3 
+                label.form-label(for='stock') Stock Inicial 
+                input.form-control#stock(
+                  type='number'
+                  name='stock'
+                  min='0'
+                  value=product ? product.stock : '0'
+                )                              
+
+          .mb-3
+            label.form-label(for='tags') Tags 
+            input.form-control#tags(
+              type='text'
+              name='tags'
+              placeholder='Ej: open-world, ofertas, liquidación'
+              value=product && product.tags ? product.tags.join(', ') : ''
+            )
+
+          .mb-3.form-check 
+            input.form-check-input#featured(
+              type='checkbox'
+              name='featured'
+              checked=product && product.featured
+            ) 
+            label.form-check-label(for='featured') Destacar este Producto 
+
+          .d-flex.gap-2 
+            button.btn.btn-primary.w-100.mt-2(type='submit')=producto ? 'Actualizar Producto' : 'Crear Producto'
+            a.btn.btn-secondary.w-100.mt-2(href='/admin/products') Cancelar  
+
+            
+
