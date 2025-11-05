@@ -36,8 +36,18 @@ block content
                 td
                   strong= product.title
                 td
-                  | $
-                  = product.price.toFixed(2)
+                  if product.discount && product.discount > 0
+                    del.text-muted
+                      | $
+                      = product.price.toFixed(2)
+                    br
+                    strong.text-danger
+                      | $
+                      = (product.price * (1 - product.discount / 100)).toFixed(2)
+                    span.badge.bg-danger.ms-2= '-' + product.discount + '%'
+                  else
+                    | $
+                    = product.price.toFixed(2)
                 td
                   each platform in product.platform
                     span.badge.bg-info.me-1= platform

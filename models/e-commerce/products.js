@@ -1,6 +1,7 @@
 
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
+const { PLATFORMS } = require('../../config/platforms')
 
 const ProductSchema = new Schema({
   title: {
@@ -41,7 +42,7 @@ const ProductSchema = new Schema({
 
   platform: [{
     type: String,
-    enum: ['Steam', 'Epic', 'Origin', 'GOG', 'Uplay', 'Xbox', 'PlayStation'],
+    enum: PLATFORMS,
     required: true
   }],
 

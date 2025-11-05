@@ -1,3 +1,5 @@
+
+const {PLATFORMS} = require('../../config/platforms');
 const Product = require('../../models/e-commerce/products');
 const { validationResult, body, escape } = require('express-validator');
 
@@ -82,6 +84,7 @@ exports.product_create_get = async (req, res, next) => {
     res.render('admin/product_form', {
         title: 'Crear Producto',
         product: null,
+        platforms: PLATFORMS,
         errors: []
     });
 };
@@ -177,6 +180,7 @@ exports.product_update_get = async (req, res, next) => {
         res.render('admin/product_form', {
             title: 'Editar producto',
             product,
+            platforms: PLATFORMS,
             errors: []
         });
 

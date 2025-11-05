@@ -14,7 +14,7 @@ block content
               each error in errors 
                 li= error.msg
 
-        form(action=product ? `/admin/products/${product._id}/edit` : '/admin/products/create' , method="post")     
+        form(action=product && product._id ? `/admin/products/${product._id}/edit` : '/admin/products/create' , method="post")     
           .mb-3 
             label.form-label(for='title') Titulo 
             input.form-control#title(
@@ -59,7 +59,7 @@ block content
           .mb-3 
             label.form-label Plataformas 
             .form-check 
-              each plataform in ['PC', 'Steam', 'Epic', 'Origin', 'GOG', 'Uplay', 'Xbox', 'PlayStation', 'Nintendo']
+              each plataform in platforms
                 .form-check 
                   input.form-check-input(
                     type="checkbox"
@@ -105,8 +105,8 @@ block content
                 input.form-control#releaseDate(
                   type='date'
                   name='releaseDate'
-                  value=(product ? (product.releaseDate ? product.releaseDate.toISOString().split('T')[0] : '') : '')
-                )     
+                  value=(product && product.releaseDate ? (typeof product.releaseDate === 'string' ? product.releaseDate.split('T')[0] : product.releaseDate.toISOString().split('T')[0]) : '')
+                  )     
 
             .col-md-6 
               .mb-3 
@@ -136,7 +136,7 @@ block content
             label.form-check-label(for='featured') Destacar este Producto 
 
           .d-flex.gap-2 
-            button.btn.btn-primary.w-100.mt-2(type='submit')=producto ? 'Actualizar Producto' : 'Crear Producto'
+            button.btn.btn-primary.w-100.mt-2(type='submit')=product && product._id  ? 'Actualizar Producto' : 'Crear Producto'
             a.btn.btn-secondary.w-100.mt-2(href='/admin/products') Cancelar  
 
             
