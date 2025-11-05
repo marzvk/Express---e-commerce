@@ -1,0 +1,45 @@
+extends ../layout
+
+block content 
+
+  .container.mt-3 
+    .row.justify-content-center 
+      .col-md-6 
+
+        .alert.alert-warning
+          h3.mb-3 ⚠️ Confirmar Eliminación
+            
+        p.lead ¿Estas seguro de eliminar el producto?
+        p Esta accion no se puede desahcer 
+
+        .card.mb-4
+          .crad-body
+            .row.mb-2
+              .col-md-4
+                strong.ms-3 Título:
+              .col-md-8
+                = product.title
+
+              .col-md-4
+                strong.ms-3 Precio:
+              .col-md-8 
+                = product.price.toFixed(2)
+
+              .col-md-4
+                strong.ms-3 Stock:
+              .col-md-8 
+                = product.stock 
+
+              .col-md-4
+                strong.ms-3 Plataformas:
+              .col-md-8 
+                each p in product.platform
+                  span.badge.bg-info.me-1= p
+
+
+        .d-grid.gap-2 
+          form(method="post", style='display: inline' ) 
+            button.btn.btn-danger.btn-mt-2(type='submit') Sí, eliminar este producto
+
+          a.btn.btn-secondary.btn-mt-2(href='/admin/products') Cancelar           
+  

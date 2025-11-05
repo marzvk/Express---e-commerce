@@ -22,38 +22,53 @@ exports.validateProduct = [
 
     body('price')
         .notEmpty().withMessage('El precio es obligatorio')
-        .isFloat({ min: 0.01 }).withMessage('El precio debe ser mayor a 0'),
+        .isFloat({ min: 0.01 }).withMessage('El precio debe ser mayor a 0')
+        .escape(),
 
     body('discount')
-        .optional()
-        .isFloat({ min: 0, max: 100 }).withMessage('El descuento debe estar entre 0 y 100'),
+        .optional({ checkFalsy: true })
+        .isFloat({ min: 0, max: 100 }).withMessage('El descuento debe estar entre 0 y 100')
+        .escape(),
 
     body('platform')
-        .notEmpty().withMessage('Selecciona al menos una plataforma'),
+        .custom((value) => {
+            // Convertir a array si es string
+            if (typeof value === 'string') {
+                value = [value];
+            }
+            if (!Array.isArray(value) || value.length === 0) {
+                throw new Error('Selecciona al menos una plataforma');
+            }
+            return true;
+        }),
 
     body('genre')
-        .optional()
-        .if(() => false).escape(),
+        .optional({ checkFalsy: true }),
 
     body('developer')
         .trim()
         .escape()
-        .optional(),
+        .optional({ checkFalsy: true }),
 
     body('publisher')
         .trim()
         .escape()
-        .optional(),
+        .optional({ checkFalsy: true }),
 
     body('releaseDate')
-        .optional()
+        .optional({ checkFalsy: true })
         .isISO8601().withMessage('La fecha debe tener formato válido'),
 
-    body('stock')
-        .optional()
-        .isInt({ min: 0 }).withMessage('El stock debe ser un número positivo')
-];
+    body('tags')
+        .optional({ checkFalsy: true })
+        .trim()
+        .escape(),
 
+    body('stock')
+        .optional({ checkFalsy: true })
+        .isInt({ min: 0 }).withMessage('El stock debe ser un número positivo')
+        .escape()
+];
 
 // ========================================
 // LISTA DE PRODUCTOS (Admin)
@@ -102,6 +117,7 @@ exports.product_create_post = async (req, res, next) => {
         return res.render('admin/product_form', {
             title: 'Crear Producto',
             product: req.body,
+            platforms: PLATFORMS,
             errors: errors.array()
         });
     }
@@ -111,7 +127,7 @@ exports.product_create_post = async (req, res, next) => {
         description,
         price,
         discount,
-        platform,
+        platform : selectedPlatforms,
         genre,
         developer,
         publisher,
@@ -128,7 +144,8 @@ exports.product_create_post = async (req, res, next) => {
             description,
             price: parseFloat(price),
             discount: discount ? parseFloat(discount) : 0,
-            platform: Array.isArray(platform) ? platform : [platform],
+            // platform: Array.isArray(platform) ? platform : [platform],
+            platform: Array.isArray(selectedPlatforms) ? selectedPlatforms : [selectedPlatforms], 
             genre: genre ? (Array.isArray(genre) ? genre : [genre]) : [],
             developer: developer || '',
             publisher: publisher || '',
@@ -159,6 +176,7 @@ exports.product_create_post = async (req, res, next) => {
         res.render('admin/product_form', {
             title: 'Crear Producto',
             product: req.body,
+            platforms: PLATFORMS,
             errors: [{ msg: errorMsg }]
         });
     }
@@ -202,6 +220,7 @@ exports.product_update_post = async (req, res, next) => {
         return res.render('admin/product_form', {
             title: 'Editar producto',
             product: { _id: req.params.id, ...req.body },
+            platforms: PLATFORMS,
             errors: errors.array()
         });
     }
@@ -256,6 +275,7 @@ exports.product_update_post = async (req, res, next) => {
         res.render('admin/product_form', {
             title: 'Editar Producto',
             product: { _id: req.params.id, ...req.body },
+            platforms: PLATFORMS,
             errors: [{ msg: 'Error al actualizar el producto' }]
         });
     }

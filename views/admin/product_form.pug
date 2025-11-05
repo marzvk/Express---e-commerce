@@ -66,7 +66,7 @@ block content
                     id=`platform_${plataform}`
                     name='platform'
                     value=plataform 
-                    checked=product && product.platform.includes(plataform)
+                    checked=(product && product.platform && Array.isArray(product.platform) && product.platform.includes(plataform) ? true : false)
                   )
                   label.form-check-label(for=`platform_${plataform}`)= plataform 
 
