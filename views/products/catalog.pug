@@ -1,0 +1,14 @@
+extends ../layout
+
+block content 
+
+  h1=title 
+  each product in products 
+    ul 
+      li.card 
+        p=product.title
+        p=product.stock
+        p=product.price
+        p=product.featured
+        p=product.genre
+        p=product.platform

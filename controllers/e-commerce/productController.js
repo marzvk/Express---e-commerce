@@ -1,5 +1,6 @@
 
-const {PLATFORMS} = require('../../config/platforms');
+const platforms = require('../../config/platforms');
+const { PLATFORMS } = require('../../config/platforms');
 const Product = require('../../models/e-commerce/products');
 const { validationResult, body, escape } = require('express-validator');
 
@@ -127,7 +128,7 @@ exports.product_create_post = async (req, res, next) => {
         description,
         price,
         discount,
-        platform : selectedPlatforms,
+        platform: selectedPlatforms,
         genre,
         developer,
         publisher,
@@ -145,7 +146,7 @@ exports.product_create_post = async (req, res, next) => {
             price: parseFloat(price),
             discount: discount ? parseFloat(discount) : 0,
             // platform: Array.isArray(platform) ? platform : [platform],
-            platform: Array.isArray(selectedPlatforms) ? selectedPlatforms : [selectedPlatforms], 
+            platform: Array.isArray(selectedPlatforms) ? selectedPlatforms : [selectedPlatforms],
             genre: genre ? (Array.isArray(genre) ? genre : [genre]) : [],
             developer: developer || '',
             publisher: publisher || '',
@@ -353,3 +354,74 @@ exports.admin_dashboard = async (req, res, next) => {
         return next(err);
     }
 };
+
+
+
+// ========================================
+// CATÁLOGO PÚBLICO (para /products)
+// ========================================
+exports.catalog_get = async (req, res, next) => {
+    try {
+        // Paginacion
+        const page = parseInt(req.query.page) || 1;
+        const limit = 10 // 10 por pagina
+        const skip = (page - 1) * limit;
+
+        // Filtros 
+        const filters = { active: true };
+
+        // por plataforma, siempre si esta en query($in busca en un array)
+        if (req.query.platform) {
+            filters.platform = { $in: req.query.platform.split(', ') };
+        }
+
+        //  por genre
+        if (req.query.genre) {
+            filters.genre = { $in: req.query.genre.split(', ') };
+        }
+
+        // busqueda de texto ( search )
+        if (req.query.search) {
+            filters.$or = [
+                { title: { $regex: req.query.search, $options: 'i' } }, // i = case insensitive, regex= like
+                { tags: { $regex: req.query.tags, $options: 'i' } }
+            ];
+        }
+
+        // ORDENAMIENTO(si hay va primero destacado, sino por fecha)
+        let sortOption = {createdAt: -1 };
+
+        if (req.query.sort === 'price-asc') {
+            sortOption = { finalPrice : 1 };
+        } else if (req.query.sort === 'price-desc') {
+            sortOption = {finalPrice : -1 };
+        } else if (req.query.sort === 'featured') {
+            sortOption = { featured : -1 , createdAt : -1 };
+        }
+
+        // Buscar los productos
+        const products = await Product.find(filters)
+            .sort(sortOption)
+            .limit(limit)
+            .skip(skip)
+            .select('title slug price discount finalPrice platform genre images featured rating')
+            .exec();
+
+        const totalProducts = await Product.countDocuments(filters);
+        const totalPages = Math.ceil(totalProducts/limit);
+        
+        res.render('products/catalog', {
+            title: 'Catalogo de Juegos',
+            products,
+            currentPage: page,
+            platforms: PLATFORMS,
+            totalPages,
+            filters: req.query, // quedan activos los filtros mandados
+            totalProducts
+        });
+
+    } catch (error) {
+        return next(error)
+    }
+};
+
