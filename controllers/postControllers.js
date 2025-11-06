@@ -14,7 +14,7 @@ exports.post_list = async (req, res, next) => {
         .populate("author", "username")
         .exec();
 
-    res.render("post_list", {
+    res.render("posts/post_list", {
         title: "Posts del Blog",
         post_list: allPosts,
         user: req.user || null,
@@ -44,7 +44,7 @@ exports.post_detail = async (req, res, next) => {
             return next(err);
         }
 
-        res.render('post_detail', {
+        res.render('posts/post_detail', {
             title: post.title,
             post: post,
             comentarios: comentarios,
@@ -74,7 +74,7 @@ exports.post_create_get = async (req, res, next) => {
         return next(err);
     }
 
-    res.render("post_form", {
+    res.render("posts/post_form", {
         title: "Create Post",
         categorias,
     });
@@ -117,7 +117,7 @@ exports.post_create_post = [
             // Hay errores - volver a mostrar el formulario
             const categorias = await Categoria.find().sort({ name: 1 }).exec();
 
-            res.render('post_form', {
+            res.render('posts/post_form', {
                 title: 'Crear Post',
                 categorias: categorias,
                 post: post, // Para mantener los datos ingresados
@@ -143,7 +143,7 @@ exports.post_delete_get = async (req, res, next) => {
             return;
         }
 
-        res.render("post_delete", {
+        res.render("posts/post_delete", {
             title: "Delete Post",
             post: post,
         });
@@ -176,7 +176,7 @@ exports.post_update_get = async (req, res, next) => {
             return next(error)
         }
 
-        res.render("post_form", {
+        res.render("posts/post_form", {
             title: "Update Post",
             post: post,
             categorias: categorias,
@@ -234,7 +234,7 @@ exports.post_update_post = [
             // Hay errores - volver a mostrar el formulario
             const categorias = await Categoria.find().sort({ name: 1 }).exec();
 
-            res.render("post_form", {
+            res.render("posts/post_form", {
                 title: "Update Post",
                 post: post,
                 categorias: categorias,

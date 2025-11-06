@@ -77,7 +77,7 @@ exports.update_get = async (req, res, next) => {
             return res.redirect(`/posts/${req.params.postId}`);
         }
 
-        res.render('comentario_form', {
+        res.render('posts/comentario_form', {
             title: 'Editar Comentario',
             post_id: req.params.postId,
             comentario: comentario,
@@ -106,7 +106,7 @@ exports.update_post = [
             // Concatenamos todos los mensajes de error en un solo string
             comentarioInvalido.content = req.body.content;
 
-            res.render('comentario_form', {
+            res.render('posts/comentario_form', {
                 title: 'Editar Comentario',
                 post_id: req.params.postId,
                 comentario: comentarioInvalido,

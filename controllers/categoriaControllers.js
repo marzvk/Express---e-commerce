@@ -13,7 +13,7 @@ exports.categoria_list = async (req, res, next) => {
         .sort({ name: 1 })
         .exec();
 
-    res.render("categoria_list", {
+    res.render("posts/categoria_list", {
         title: "Categorias",
         categoria_list: allCategorias,
     });
@@ -35,7 +35,7 @@ exports.categoria_detail = async (req, res, next) => {
             return next(err);
         }
 
-        res.render("categoria_detail", {
+        res.render("posts/categoria_detail", {
             title: "Noticias de la Categoria",
             categoria,
             posts: postInCategoria,
@@ -48,7 +48,7 @@ exports.categoria_detail = async (req, res, next) => {
 
 // // CREATE
 exports.categoria_create_get = (req, res) => {
-  res.render("categoria_form", {
+  res.render("posts/categoria_form", {
     title: "Crear Categoría",
   });
 };
@@ -72,7 +72,7 @@ exports.categoria_create_post = [
             // hay errores vuelve a mostrar form
             const categorias = await Categoria.find().sort({ name: 1 }).exec();
 
-            res.render("categoria_form", {
+            res.render("posts/categoria_form", {
                 title: "Create Categoria",
                 categorias,
                 categoria,
@@ -100,7 +100,7 @@ exports.categoria_delete_get = async (req, res, next) => {
             return;
         }
 
-        res.render("categoria_delete", {
+        res.render("posts/categoria_delete", {
             title: "Delete Categoria",
             categoria,
             posts: postInCategoria,
@@ -120,7 +120,7 @@ exports.categoria_delete_post = async (req, res, next) => {
 
         if (postInCategoria.length > 0) {
             // hay posts en esta categoria
-            res.render("categoria_delete", {
+            res.render("posts/categoria_delete", {
                 title: "Delete Categoria",
                 categoria,
                 posts: postInCategoria,
@@ -148,7 +148,7 @@ exports.categoria_update_get = async (req, res, next) => {
             return next(err);
         }
 
-        res.render("categoria_form", {
+        res.render("posts/categoria_form", {
             title: "Update su Categoria",
             categoria,
         })
@@ -177,7 +177,7 @@ exports.categoria_update_post = [
         if (!errors.isEmpty()) {
             const categoria = await Categoria.findById(req.params.id).exec();
 
-            res.render("categoria_form", {
+            res.render("posts/categoria_form", {
                 title: "Update categoria",
                 categoria,
                 errors: errors.array(),
