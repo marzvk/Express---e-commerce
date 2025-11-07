@@ -1,14 +1,154 @@
 extends ../layout
 
-block content 
+block content
+  .container.my-4
+    //- Encabezado con título y búsqueda
+    .row.mb-4
+      .col-md-8
+        h1.display-4 Catálogo de Juegos
+        p.fs-5
+          span.badge.bg-info.text-dark= totalProducts
+          |  juegos disponibles
+      
+      .col-md-4
+        form.d-flex(method='GET' action='/products')
+          input.form-control.me-2(
+            type='search' 
+            name='search' 
+            placeholder='Buscar juegos...' 
+            value=filters.search || ''
+          )
+          button.btn.btn-primary(type='submit') Buscar
 
-  h1=title 
-  each product in products 
-    ul 
-      li.card 
-        p=product.title
-        p=product.stock
-        p=product.price
-        p=product.featured
-        p=product.genre
-        p=product.platform
+    .row
+      //- Sidebar de filtros (izquierda)
+      .col-md-3
+        .card.mb-4
+          .card-header
+            h5 Filtros
+          .card-body
+            form(method='GET' action='/products')
+              //- Ordenar por
+              .mb-3
+                label.form-label Ordenar por
+                select.form-select(name='sort' onchange='this.form.submit()')
+                  option(value='' selected=!filters.sort) Más recientes
+                  option(value='price-asc' selected=filters.sort === 'price-asc') Precio: menor a mayor
+                  option(value='price-desc' selected=filters.sort === 'price-desc') Precio: mayor a menor
+                  option(value='featured' selected=filters.sort === 'featured') Destacados
+              
+              hr
+              
+              //- Filtro por plataforma
+              .mb-3
+                label.form-label Plataforma
+                each platform in platforms
+                  .form-check
+                    input.form-check-input(
+                      type='checkbox' 
+                      name='platform' 
+                      value=platform 
+                      id=`platform-${platform}`
+                      checked=filters.platform && filters.platform.includes(platform)
+                    )
+                    label.form-check-label(for=`platform-${platform}`)= platform
+              
+              hr
+              
+              //- Filtro por género
+              .mb-3
+                label.form-label Género
+                select.form-select(name='genre')
+                  option(value='') Todos
+                  each genre in ['Action', 'RPG', 'Strategy', 'Adventure', 'Shooter', 'Sports', 'Racing', 'Indie', 'Simulation']
+                    option(value=genre selected=filters.genre === genre)= genre
+              
+              .d-grid.gap-2
+                button.btn.btn-primary(type='submit') Aplicar Filtros
+                a.btn.btn-outline-secondary(href='/products') Limpiar
+      
+      //- Grid de productos (derecha)
+      .col-md-9
+        if products.length === 0
+          .alert.alert-info No se encontraron productos con esos filtros
+        else
+          .row.row-cols-1.row-cols-md-3.g-4
+            each product in products
+              .col
+                .card.h-100.product-card
+                  //- Imagen del producto
+                  if product.images && product.images.thumbnail
+                    img.card-img-top(
+                      src=product.images.thumbnail 
+                      alt=product.title
+                      style='height: 200px; object-fit: cover;'
+                    )
+                  else
+                    .bg-secondary.text-white.d-flex.align-items-center.justify-content-center(
+                      style='height: 200px;'
+                    )
+                      | Sin imagen
+                  
+                  .card-body
+                    //- Badge de destacado
+                    if product.featured
+                      span.badge.bg-warning.text-dark.mb-2 ⭐ Destacado
+                    
+                    //- Título
+                    h5.card-title= product.title
+                    
+                    //- Plataformas
+                    .mb-2
+                      each platform in product.platform
+                        span.badge.bg-secondary.me-1= platform
+                    
+                    //- Géneros
+                    .mb-2.text-muted.small
+                      = product.genre.slice(0, 2).join(', ')
+                    
+                    //- Rating (si existe)
+                    if product.rating && product.rating.count > 0
+                      .mb-2
+                        span ⭐ #{product.rating.average.toFixed(1)}
+                        span.text-muted.small  (#{product.rating.count} reseñas)
+                  
+                  .card-footer.bg-white
+                    .d-flex.justify-content-between.align-items-center
+                      .price
+                        if product.discount > 0
+                          span.text-muted.text-decoration-line-through.me-2 $#{product.price.toFixed(2)}
+                          span.badge.bg-danger -#{product.discount}%
+                          br
+                          strong.text-success.fs-5 $#{product.finalPrice.toFixed(2)}
+                        else
+                          strong.fs-5 $#{product.price.toFixed(2)}
+                      
+                      a.btn.btn-primary.btn-sm(href=`/products/${product.slug}`) Ver detalles
+
+        //- Paginación
+        if totalPages > 1
+          nav.mt-4(aria-label='Paginación')
+            ul.pagination.justify-content-center
+              //- Botón anterior
+              li.page-item(class=currentPage === 1 ? 'disabled' : '')
+                a.page-link(href=`?page=${currentPage - 1}${filters.search ? '&search=' + filters.search : ''}`) Anterior
+              
+              //- Números de página
+              - for (let i = 1; i <= totalPages; i++)
+                li.page-item(class=i === currentPage ? 'active' : '')
+                  a.page-link(href=`?page=${i}${filters.search ? '&search=' + filters.search : ''}`)= i
+              
+              //- Botón siguiente
+              li.page-item(class=currentPage === totalPages ? 'disabled' : '')
+                a.page-link(href=`?page=${currentPage + 1}${filters.search ? '&search=' + filters.search : ''}`) Siguiente
+
+  //- Estilos adicionales
+  style.
+    .product-card {
+      transition: transform 0.2s, box-shadow 0.2s;
+      cursor: pointer;
+    }
+    .product-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }

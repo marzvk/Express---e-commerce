@@ -77,7 +77,7 @@ block content
               multiple
             )
               each g in ['Action', 'RPG', 'Strategy', 'Adventure', 'Shooter', 'Sports', 'Racing', 'Indie', 'Simulation']
-                option(value=g selected=product && product.genre.includes(g))= g 
+                option(value=g selected=(product && product.genre && product.genre.includes(g)))= g
 
           .row 
             .col-md-6 

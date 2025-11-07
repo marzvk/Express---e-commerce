@@ -99,7 +99,7 @@ exports.admin_product_list = async (req, res, next) => {
 exports.product_create_get = async (req, res, next) => {
     res.render('admin/product_form', {
         title: 'Crear Producto',
-        product: null,
+        product: { genre: [] },
         platforms: PLATFORMS,
         errors: []
     });
@@ -364,7 +364,7 @@ exports.catalog_get = async (req, res, next) => {
     try {
         // Paginacion
         const page = parseInt(req.query.page) || 1;
-        const limit = 10 // 10 por pagina
+        const limit = 9 // 9 por pagina
         const skip = (page - 1) * limit;
 
         // Filtros 
@@ -372,7 +372,8 @@ exports.catalog_get = async (req, res, next) => {
 
         // por plataforma, siempre si esta en query($in busca en un array)
         if (req.query.platform) {
-            filters.platform = { $in: req.query.platform.split(', ') };
+            const platforms = Array.isArray(req.query.platform) ? req.query.platform : req.query.platform.split(',').map(p => p.trim());
+            filters.platform = { $in: platforms };
         }
 
         //  por genre
@@ -380,11 +381,13 @@ exports.catalog_get = async (req, res, next) => {
             filters.genre = { $in: req.query.genre.split(', ') };
         }
 
+        const escapeRegex = str => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         // busqueda de texto ( search )
         if (req.query.search) {
+            const search = escapeRegex(req.query.search.trim());
             filters.$or = [
-                { title: { $regex: req.query.search, $options: 'i' } }, // i = case insensitive, regex= like
-                { tags: { $regex: req.query.tags, $options: 'i' } }
+                { title: { $regex: String(`\\b${search}\\b`), $options: 'i' } }, // i = case insensitive, regex= like
+                { tags: { $regex: String(`\\b${search}\\b`), $options: 'i' } }
             ];
         }
 
