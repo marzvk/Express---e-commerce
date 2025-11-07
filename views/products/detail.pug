@@ -1,0 +1,16 @@
+extends ../layout 
+
+block content 
+
+  h1=product.title 
+  h3=product.price 
+  h3=product.finalPrice 
+  h6=product.description
+  p=product.platform 
+
+  h5 Juegos Similares:  
+  ul 
+    each p in relacionados 
+      li 
+        p=p.title 
+        p=p.price

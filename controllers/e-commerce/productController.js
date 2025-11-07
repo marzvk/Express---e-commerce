@@ -392,14 +392,14 @@ exports.catalog_get = async (req, res, next) => {
         }
 
         // ORDENAMIENTO(si hay va primero destacado, sino por fecha)
-        let sortOption = {createdAt: -1 };
+        let sortOption = { createdAt: -1 };
 
         if (req.query.sort === 'price-asc') {
-            sortOption = { finalPrice : 1 };
+            sortOption = { finalPrice: 1 };
         } else if (req.query.sort === 'price-desc') {
-            sortOption = {finalPrice : -1 };
+            sortOption = { finalPrice: -1 };
         } else if (req.query.sort === 'featured') {
-            sortOption = { featured : -1 , createdAt : -1 };
+            sortOption = { featured: -1, createdAt: -1 };
         }
 
         // Buscar los productos
@@ -411,8 +411,8 @@ exports.catalog_get = async (req, res, next) => {
             .exec();
 
         const totalProducts = await Product.countDocuments(filters);
-        const totalPages = Math.ceil(totalProducts/limit);
-        
+        const totalPages = Math.ceil(totalProducts / limit);
+
         res.render('products/catalog', {
             title: 'Catalogo de Juegos',
             products,
@@ -428,3 +428,39 @@ exports.catalog_get = async (req, res, next) => {
     }
 };
 
+
+// ========================================
+// DETALLE DE PRODUCTO
+// ========================================
+exports.product_detail_get = async (req, res, next) => {
+    try {
+        const product = await Product.findOne({
+            slug: req.params.slug,
+            active: true
+        }).exec();
+
+        if (!product) {
+            const error = new Error('Producto no encontrado');
+            error.stats = 404;
+            return next(error)
+        }
+
+        // productos relacionados para mostrar(se excluye el actual)
+        const relacionados = await Product.find({
+            genre: { $in: product.genre },
+            _id: { $ne: product._id },
+            active: true
+        })
+            .limit(4)
+            .select('title slug price finalPrice images platform')
+            .exec();
+
+        res.render('products/detail', {
+            product,
+            relacionados
+        })
+
+    } catch (error) {
+        return next(error)
+    }
+}

@@ -6,6 +6,6 @@ const productController = require('../../controllers/e-commerce/productControlle
 router.get('/', productController.catalog_get);
 
 // Detail individual del producto
-// router.get('/:slug', productController.product_detail_get);
+router.get('/:slug', productController.product_detail_get);
 
 module.exports = router;
