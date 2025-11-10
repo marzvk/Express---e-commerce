@@ -1,16 +1,159 @@
 extends ../layout 
 
 block content 
+  .container.my-4
+    .row.col-md-3.card
+      nav(aria-label='breadcrumb')
+        ol.breadcrumb.justify-content-center
+          li.breadcrumb-item
+            a(href='/') Inicio
+          li.breadcrumb-item
+            a(href='/products') Catálogo
+          li.breadcrumb-item.active(aria-current='page')= product.title
 
-  h1=product.title 
-  h3=product.price 
-  h3=product.finalPrice.toFixed(2) 
-  h6=product.description
-  p=product.platform.join(', ') 
+    .row
+      //- Columna izquierda: Imágenes
+      .col-md-6
+        //- Imagen principal
+        if product.images && product.images.cover
+          img.img-fluid.rounded.mb-3(
+            src=product.images.cover 
+            alt=product.title
+            style='width: 100%; height: 400px; object-fit: cover;'
+          )
+        else
+          .bg-secondary.text-white.d-flex.align-items-center.justify-content-center.rounded.mb-3(
+            style='width: 100%; height: 400px;'
+          )
+            h3 Sin imagen
+        
+        //- Galería de screenshots (si existen)
+        if product.images && product.images.screenshots && product.images.screenshots.length > 0
+          .row.g-2
+            each screenshot in product.images.screenshots.slice(0, 4)
+              .col-3
+                img.img-fluid.rounded(
+                  src=screenshot 
+                  alt='Screenshot'
+                  style='height: 80px; object-fit: cover; cursor: pointer;'
+                )
 
-  h5 Juegos Similares:  
-  ul 
-    each p in relacionados 
-      li 
-        p=p.title 
-        p=p.price
+      //- Columna derecha: Información
+      .col-md-6
+        //- Badge de destacado
+        if product.featured
+          span.badge.bg-warning.text-dark.mb-2 ★ DESTACADO
+
+        //- Título
+        h1.display-5.mb-3= product.title
+
+        //- Rating
+        if product.rating && product.rating.count > 0
+          .mb-3
+            span.fs-4 ⭐ #{product.rating.average.toFixed(1)}/5
+            span.text-muted.ms-2 (#{product.rating.count} reseñas)
+        
+        //- Precio
+        .card.mb-4
+          .card-body
+            if product.discount > 0
+              .d-flex.align-items-center.mb-2
+                span.badge.bg-danger.fs-6 -#{product.discount}%
+                span.text-muted.text-decoration-line-through.ms-2.fs-5 $#{product.price.toFixed(2)}
+              .mb-3
+                strong.text-success.display-6 $#{product.finalPrice.toFixed(2)}
+            else
+              strong.display-6 $#{product.price.toFixed(2)}
+            
+            //- Stock
+            if product.stock > 0
+              p.text-success.mb-3 ✓ Disponible - Stock: #{product.stock} unidades
+            else
+              p.text-danger.mb-3 ✗ Sin stock disponible
+            
+            //- Botón de compra
+            if product.stock > 0
+              button.btn.btn-success.btn-lg.w-100.mb-2(type='button') 
+                | 🛒 Agregar al carrito
+              p.text-muted.small.text-center Entrega inmediata por email
+            else
+              button.btn.btn-secondary.btn-lg.w-100(type='button' disabled) 
+                | Sin stock
+
+        //- Información del juego
+        .card.mb-4
+          .card-header
+            h5 Información del juego
+          .card-body
+            table.table.table-sm
+              tbody
+                tr
+                  td
+                    strong Plataforma:
+                  td
+                    each platform in product.platform
+                      span.badge.bg-primary.me-1= platform
+                
+                if product.genre && product.genre.length > 0
+                  tr
+                    td
+                      strong Género:
+                    td= product.genre.join(', ')
+                
+                if product.developer
+                  tr
+                    td
+                      strong Desarrollador:
+                    td= product.developer
+                
+                if product.publisher
+                  tr
+                    td
+                      strong Publisher:
+                    td= product.publisher
+                
+                if product.releaseDate
+                  tr
+                    td
+                      strong Fecha de lanzamiento:
+                    td= new Date(product.releaseDate).toLocaleDateString('es-ES')
+
+        //- Tags
+        if product.tags && product.tags.length > 0
+          .mb-4
+            each tag in product.tags
+              span.badge.bg-secondary.me-1.mb-1= tag
+
+    //- Descripción 
+    .row.mt-4
+      .col-12
+        .card
+          .card-header
+            h5 Descripción
+          .card-body
+            p(style='white-space: pre-wrap;')= product.description
+
+    //- Productos relacionados
+    //- LUEGO HACER CON CARRUSEL Y MAS ELEMENTOS
+    if relacionados && relacionados.length > 0
+      .row.mt-5
+        .col-12
+          h3.mb-4 Juegos similares
+          .row.row-cols-1.row-cols-md-4.g-4
+            each related in relacionados
+              .col
+                .card.h-100
+                  if related.images && related.images.thumbnail
+                    img.card-img-top(
+                      src=related.images.thumbnail 
+                      alt=related.title
+                      style='height: 150px; object-fit: cover;'
+                    )
+                  .card-body
+                    h6.card-title= related.title
+                    p.mb-1
+                      each platform in related.platform
+                        span.badge.bg-secondary.me-1.small= platform
+                    strong.text-success $#{related.finalPrice.toFixed(2)}
+                  .card-footer.bg-white
+                    a.btn.btn-sm.btn-outline-primary.w-100(href=`/products/${related.slug}`) Ver
