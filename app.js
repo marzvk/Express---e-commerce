@@ -93,6 +93,19 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 
+// ========================================
+// INICIALIZAR CARRITO EN SESION
+// ========================================
+app.use((req, res, next) => {
+  if (!req.session.cart) {
+    req.session.cart = [];
+  }
+  // carrito disponible en todas las views
+  res.locals.cart = req.session.cart
+  res.locals.cartCount = req.session.cart.length;
+  next();
+});
+
 
 // ========================================
 // CONNECT-FLASH (mensajes flash)
@@ -138,6 +151,7 @@ var postsRouter = require('./routes/posts');
 var loginRouter = require('./routes/auth');
 const adminRoutes = require('./routes/e-commerce/admin');
 const productRouter = require('./routes/e-commerce/products');
+const cartRoutes = require('./routes/e-commerce/cart');
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
@@ -146,6 +160,7 @@ app.use('/posts', postsRouter);
 app.use('/auth', loginRouter);
 app.use('/admin', adminRoutes);
 app.use('/products', productRouter);
+app.use('/cart', cartRoutes);
 
 
 // ========================================
