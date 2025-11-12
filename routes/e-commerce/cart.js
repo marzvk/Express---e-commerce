@@ -31,13 +31,13 @@ router.post('/update', cartController.update_cart);
 // // ====================================
 // // Eliminar del carrito
 // // ====================================
-// router.post('/delete', cartController.remove_from_cart);
+router.post('/remove', cartController.remove_from_cart);
 
 
 // // ====================================
 // // Vaciar carrito
 // // ====================================
-// router.post('/clear', cartController.clear_cart);
+router.post('/clear', cartController.clear_cart);
 
 
 

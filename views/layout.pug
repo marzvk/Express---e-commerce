@@ -30,8 +30,8 @@ html(lang='es')
 
           li.nav-item
             a.nav-link(href='/cart') 🛒 Carrito 
-              if cartount > 0
-                span.bg-danger= cartCount
+              if cartCount > 0
+                span.badge.bg-danger= cartCount
           
           if user
             //- Usuario logueado

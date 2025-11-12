@@ -73,12 +73,27 @@ block content
             
             //- Botón de compra
             if product.stock > 0
-              button.btn.btn-success.btn-lg.w-100.mb-2(type='button') 
-                | 🛒 Agregar al carrito
-              p.text-muted.small.text-center Entrega inmediata por email
+              form(action="/cart/add", method="post")
+                input(type="hidden", name="productId", value=product._id)
+              
+                if product.platform.length > 1
+                  .mb-3
+                    label.form-label Selecciona plataforma:
+                    select.form-select(name="platform" required)
+                      option(value='') Selecciona una opción
+                      each p in product.platform
+                        option(value=p)= p
+                else
+                  // Si solo hay una plataforma, la mandamos como hidden
+                  input(type="hidden", name="platform", value=product.platform[0])
+              
+                button.btn.btn-success.btn-lg.w-100.mb-2(type='submit') 🛒 Agregar al carrito
+                p.text-muted.small.text-center Entrega inmediata por email
+              
+            //- Si no hay stock
             else
-              button.btn.btn-secondary.btn-lg.w-100(type='button' disabled) 
-                | Sin stock
+              button.btn.btn-secondary.btn-lg.w-100(type='button' disabled) 🚫 Sin stock
+              p.text-muted.small.text-center Producto temporalmente no disponible
 
         //- Información del juego
         .card.mb-4
