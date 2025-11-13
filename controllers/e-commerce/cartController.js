@@ -33,20 +33,20 @@ exports.add_to_cart = async (req, res) => {
             return res.redirect('/products');
         }
 
-        // Ver si hay keys disponibles, busqueda por indice compuesto
-        const availableKeys = await Key.countDocuments({
-            product: productId,
-            platform: platform,
-            status: 'available'
-        });
-        if (availableKeys === 0) {
-            req.flash('error_msg', 'No hay keys disponibles para esta plataforma');
-            return res.redirect(`/products/${product.slug}`);
-        }
+        // // Ver si hay keys disponibles, busqueda por indice compuesto
+        // const availableKeys = await Key.countDocuments({
+        //     product: productId,
+        //     platform: platform,
+        //     status: 'available'
+        // });
+        // if (availableKeys === 0) {
+        //     req.flash('error_msg', 'No hay keys disponibles para esta plataforma');
+        //     return res.redirect(`/products/${product.slug}`);
+        // }
 
         // Verificar si esta en el cart
         const existingItem = req.session.cart.find(
-            item => item.product.toString() === productId && item.platform === platform
+            item => item.productId && item.productId.toString() === productId && item.platform === platform
         );
         if (existingItem) {
             req.flash('info_msg', 'Este producto ya esta en tu carrito');
@@ -78,3 +78,64 @@ exports.add_to_cart = async (req, res) => {
     }
 };
 
+
+// ========================================
+// ACTUALIZAR CANTIDAD
+// ========================================
+exports.update_cart = async (req, res) => {
+    const { productId, platform, quantity } = req.body;
+    const qty = parseInt(quantity);
+
+    if (qty < 1) {
+        // si se pone en 0 es como borrar, llama a remove con req y res
+        return exports.remove_from_cart(req, res);
+    }
+
+    const item = req.session.cart.find(
+        i => i.productId.toString() === productId && (
+            Array.isArray(i.platform)
+                ? i.platform.includes(platform)
+                : i.platform === platform
+        )
+    );
+
+    if (item) {
+        const product = await Product.findById(productId).select('stock').lean();
+
+        const maxQty = Math.min(product.stock, 10);
+
+        if (qty > maxQty) {
+            req.flash('error_msg', `Solo podés agregar hasta ${maxQty} unidades de ${item.title}.`);
+            item.quantity = maxQty;
+        } else {
+            item.quantity = qty;
+            req.flash('success_msg', 'Carrito actualizado con éxito')
+        }
+
+        res.redirect('/cart');
+    };
+}
+
+
+// ========================================
+// ELIMINAR DEL CARRITO
+// ========================================
+exports.remove_from_cart = (req, res) => {
+    const { productId, platform } = req.body;
+    req.session.cart = req.session.cart.filter(
+        item => !(item.productId.toString() === productId && item.platform === platform)
+    );
+    req.flash('success_msg', 'Producto eliminado del carrito');
+    res.redirect('/cart');
+};
+
+
+
+// ========================================
+// VACIAR CARRITO
+// ========================================
+exports.clear_cart = (req, res) => {
+    req.session.cart = [];
+    req.flash('success_msg', 'Carrito vaciado');
+    res.redirect('/cart');
+};
