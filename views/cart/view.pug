@@ -1,0 +1,89 @@
+extends ../layout
+
+block content
+  .container.my-4
+    h1.mb-4 🛒 Carrito de Compras
+    
+    if cart.length === 0
+      .alert.alert-info
+        h4 Tu carrito está vacío
+        p ¡Explora nuestro catálogo y encuentra juegos increíbles!
+        a.btn.btn-primary(href='/products') Ir al Catálogo
+    else
+      .row
+        //- Lista de items
+        .col-md-8
+          each item in cart
+            .card.mb-3
+              .card-body
+                .row.align-items-center
+                  .col-md-2
+                    img.img-fluid.rounded(src=item.image alt=item.title)
+                  
+                  .col-md-4
+                    h5.mb-1= item.title
+                    p.text-muted.mb-0
+                      span.badge.bg-secondary= item.platform
+                  
+                  .col-md-2
+                    if item.discount > 0
+                      small.text-muted.text-decoration-line-through $#{item.price.toFixed(2)}
+                      br
+                      strong.text-success $#{item.finalPrice.toFixed(2)}
+                    else
+                      strong $#{item.price.toFixed(2)}
+                  
+                  .col-md-2
+                    form(method='POST' action='/cart/update')
+                      input(type='hidden' name='productId' value=item.productId)
+                      input(type='hidden' name='platform' value=item.platform)
+                      - const maxQty = Math.min(item.stock, 10);
+
+                        .input-group.input-group-sm
+                          input.form-control(
+                            type='number' 
+                            name='quantity' 
+                            value=item.quantity 
+                            min='1'
+                            max=maxQty
+                            title='Cantidad'
+                          )
+                          button.btn.btn-success.btn-sm(type='submit' title='Actualizar cantidad') ✔️
+                  
+                  .col-md-2.text-end
+                    form(method='POST' action='/cart/remove' style='display:inline')
+                      input(type='hidden' name='productId' value=item.productId)
+                      input(type='hidden' name='platform' value=item.platform)
+                      button.btn.btn-sm.btn-danger(type='submit' onclick='return confirm("¿Eliminar producto?")') 
+                        | ✕
+        
+        //- Resumen
+        .col-md-4
+          .card
+            .card-header
+              h5 Resumen de compra
+            .card-body
+              .d-flex.justify-content-between.mb-2
+                span Subtotal:
+                strong $#{subtotal.toFixed(2)}
+              
+              hr
+              
+              .d-flex.justify-content-between.mb-3
+                strong Total:
+                strong.fs-4.text-success $#{subtotal.toFixed(2)}
+              
+              if user
+                a.btn.btn-success.w-100.mb-2(href='/checkout') Proceder al pago
+                p.text-muted.small.text-center Entrega inmediata por email
+              else
+                a.btn.btn-primary.w-100.mb-2(href='/auth/login') Inicia sesión para comprar
+                p.text-muted.small.text-center Necesitas una cuenta para continuar
+            
+            .card-footer
+              form(method='POST' action='/cart/clear')
+                button.btn.btn-sm.btn-outline-secondary.w-100(type='submit' onclick='return confirm("¿Vaciar carrito?")') 
+                  | Vaciar carrito
+          
+            .mt-3
+              a.btn.btn-outline-primary.w-100(href='/products') ← Seguir comprando

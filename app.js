@@ -152,6 +152,8 @@ var loginRouter = require('./routes/auth');
 const adminRoutes = require('./routes/e-commerce/admin');
 const productRouter = require('./routes/e-commerce/products');
 const cartRoutes = require('./routes/e-commerce/cart');
+const checkoutRoutes = require('./routes/e-commerce/checkout');
+const orderRoutes = require('./routes/e-commerce/orders');
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
@@ -161,6 +163,8 @@ app.use('/auth', loginRouter);
 app.use('/admin', adminRoutes);
 app.use('/products', productRouter);
 app.use('/cart', cartRoutes);
+app.use('/checkout', checkoutRoutes);
+app.use('/orders', orderRoutes);
 
 
 // ========================================
