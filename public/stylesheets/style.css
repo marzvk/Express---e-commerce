@@ -181,15 +181,15 @@ a.nav-link:hover {
 }
 
 .btn-logout {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 1.1rem;   /* texto */
-  font-weight: 500;
+  /* background: #ff4d4d; */
+  color: #ff4d4d !important;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-weight: 600;
 }
 
 .btn-logout::before {
   content: "⏻";
-  font-size: 1.4rem;   /* ← icono más grande */
-  line-height: 1;
+  font-size: 1.4rem;
+  margin-right: 6px;
 }
