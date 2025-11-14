@@ -23,10 +23,7 @@ html(lang='es')
             a.nav-link(href='/products') 🎮 Juegos
 
           li.nav-item
-            a.nav-link(href='/posts') 📝 Noticias
-          
-          li.nav-item
-            a.nav-link(href='/about') About
+            a.nav-link(href='/posts') 📝 Noticias                   
 
           li.nav-item
             a.nav-link(href='/cart') 🛒 Carrito 
@@ -38,6 +35,8 @@ html(lang='es')
             li.nav-item
               a.nav-link(href='/users/profile') 
                 | 👤 #{user.username}
+            li.nav-item
+             a.nav-link(href='/orders') 📦 Mis Órdenes
                         
             if user.isAdmin
               li.nav-item
@@ -46,7 +45,7 @@ html(lang='es')
             li.nav-item
               //- Mantener tu formulario POST original
               form(method='POST' action='/auth/logout' style='display:inline')
-                button.nav-link.btn-logout(type='submit') Logout
+                button.nav-link.btn-logout(type='submit')
           else
             //- Usuario no logueado
             li.nav-item
@@ -80,6 +79,8 @@ html(lang='es')
 
     footer.footer
       p &copy; 2025 Blog de Videojuegos. Todos los derechos reservados.
+      
+      a.nav-link(href='/about') About us
     
     script(
       src='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js'

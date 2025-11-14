@@ -179,3 +179,17 @@ a.nav-link:hover {
     margin-bottom: 20px;
   }
 }
+
+.btn-logout {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 1.1rem;   /* texto */
+  font-weight: 500;
+}
+
+.btn-logout::before {
+  content: "⏻";
+  font-size: 1.4rem;   /* ← icono más grande */
+  line-height: 1;
+}
