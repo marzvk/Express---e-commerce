@@ -1,0 +1,37 @@
+extends ../layout
+
+block content
+  .container.my-4
+    h1.mb-4 Finalizar Compra
+    
+    .row
+      .col-md-8
+        .card.mb-4
+          .card-header
+            h5 Resumen de tu pedido
+          .card-body
+            each item in cart
+              .d-flex.justify-content-between.mb-2
+                div
+                  strong= item.title
+                  br
+                  small.text-muted= item.platform
+                div
+                  strong #{item.quantity} x $#{item.finalPrice.toFixed(2)}
+      
+      .col-md-4
+        .card
+          .card-header
+            h5 Total a pagar
+          .card-body
+            .d-flex.justify-content-between.mb-3
+              strong Total:
+              strong.fs-4.text-success $#{total.toFixed(2)}
+            
+            form(method='POST' action='/checkout/process')
+              button.btn.btn-success.btn-lg.w-100(type='submit') 
+                | Confirmar compra (Simulado)
+              p.text-muted.small.text-center.mt-2 
+                | Por ahora es una compra simulada. 
+                br
+                | ¡Recibirás tus keys al instante!
