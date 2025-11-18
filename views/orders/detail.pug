@@ -1,0 +1,52 @@
+extends ../layout
+
+block content
+  .container.my-4
+    h1.mb-4= title
+    
+    .card.mb-4
+      .card-header
+        h5 Información de la orden
+      .card-body
+        .row
+          .col-md-6
+            p
+              strong Fecha: 
+              = new Date(order.createdAt).toLocaleDateString('es-ES')
+          .col-md-6
+            p
+              strong Estado: 
+              if order.status === 'completed'
+                span.badge.bg-success Completada
+              else
+                span.badge.bg-warning= order.status
+        
+        hr
+        
+        p
+          strong Total pagado: 
+          span.fs-4.text-success $#{order.total.toFixed(2)}
+    
+    .card
+      .card-header
+        h5 Tus Keys de Activación
+      .card-body
+        each keyData in keys
+          .alert.alert-success
+            h6= keyData.title
+            p.mb-1
+              span.badge.bg-primary= keyData.platform
+            p.mb-0
+              strong Clave de activación: 
+              code.fs-5= keyData.key
+            small.text-muted 
+              | Copia esta clave y actívala en #{keyData.platform}
+          hr
+        
+        .alert.alert-info
+          strong ¿Cómo activar?
+          ol.mb-0
+            li Abre tu plataforma (Steam, Epic, etc.)
+            li Ve a "Activar un producto"
+            li Ingresa tu clave
+            li ¡A jugar!

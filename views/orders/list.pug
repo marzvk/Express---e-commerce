@@ -1,0 +1,35 @@
+extends ../layout
+
+block content
+  .container.my-4
+    h1.mb-4 Mis Órdenes
+    
+    if orders.length === 0
+      .alert.alert-info No tienes órdenes aún
+    else
+      each order in orders
+        .card.mb-3
+          .card-body
+            .row.align-items-center
+              .col-md-3
+                strong Orden ##{order._id.toString().slice(-6)}
+                br
+                small.text-muted= new Date(order.createdAt).toLocaleDateString('es-ES')
+              
+              .col-md-3
+                = order.products.length
+                |  producto(s)
+              
+              .col-md-2
+                strong.text-success $#{order.total.toFixed(2)}
+              
+              .col-md-2
+                if order.status === 'completed'
+                  span.badge.bg-success Completada
+                else if order.status === 'pending'
+                  span.badge.bg-warning Pendiente
+                else
+                  span.badge.bg-secondary= order.status
+              
+              .col-md-2.text-end
+                a.btn.btn-sm.btn-primary(href=`/orders/${order._id}`) Ver detalles
