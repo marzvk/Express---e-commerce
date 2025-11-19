@@ -1,0 +1,15 @@
+const { v2: cloudinary } = require('cloudinary');
+
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+    secure: true
+});
+
+// Solo mostramos logs en desarrollo
+if (process.env.NODE_ENV !== 'production') {
+    console.log('🌥️ Cloudinary configurado correctamente');
+}
+
+module.exports = cloudinary;
