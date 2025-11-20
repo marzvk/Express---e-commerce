@@ -58,6 +58,6 @@ const KeySchema = new Schema({
 KeySchema.index({ product: 1, platform: 1, status: 1 });
 
 // Índice simple (admin, reportes, búsquedas por estado)
-KeySchema.index({ status: 1 });
+// KeySchema.index({ status: 1 });
 
 module.exports = mongoose.model('Key', KeySchema);
