@@ -4,6 +4,8 @@ const { PLATFORMS } = require('../../config/platforms');
 const Product = require('../../models/e-commerce/products');
 const { validationResult, body, escape } = require('express-validator');
 
+const { deleteCloudinaryImage } = require('../../utils/cloudinaryHelper');
+
 // ========================================
 // VALIDACIONES
 // ========================================
@@ -108,15 +110,14 @@ exports.product_create_get = async (req, res, next) => {
 
 
 // ========================================
-// PROCESAR CREAR PRODUCTO
-// ========================================
-exports.product_create_post = async (req, res, next) => {
-
+// PROCESAR CREAR PRODUCTO CON IMAGENES
+// // ========================================
+exports.product_create_post = async (req, res) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-        return res.render('admin/product_form', {
-            title: 'Crear Producto',
+        return res.render("admin/product_form", {
+            title: "Crear Producto",
             product: req.body,
             platforms: PLATFORMS,
             errors: errors.array()
@@ -124,64 +125,59 @@ exports.product_create_post = async (req, res, next) => {
     }
 
     const {
-        title,
-        description,
-        price,
-        discount,
-        platform: selectedPlatforms,
-        genre,
-        developer,
-        publisher,
-        releaseDate,
-        tags,
-        featured,
-        stock
+        title, description, price, discount,
+        platform: selectedPlatforms, genre,
+        developer, publisher, releaseDate,
+        tags, featured, stock
     } = req.body;
 
-
     try {
+        const images = {
+            thumbnail:
+                req.cloudinaryFiles?.thumbnail?.[0] ||
+                { url: "/images/placeholder-game.jpg", public_id: null },
+
+            cover:
+                req.cloudinaryFiles?.cover?.[0] ||
+                { url: "/images/placeholder-game.jpg", public_id: null },
+
+            screenshots:
+                req.cloudinaryFiles?.screenshots || []
+        };
+
         const product = new Product({
             title,
             description,
             price: parseFloat(price),
             discount: discount ? parseFloat(discount) : 0,
-            // platform: Array.isArray(platform) ? platform : [platform],
             platform: Array.isArray(selectedPlatforms) ? selectedPlatforms : [selectedPlatforms],
             genre: genre ? (Array.isArray(genre) ? genre : [genre]) : [],
-            developer: developer || '',
-            publisher: publisher || '',
+            developer: developer || "",
+            publisher: publisher || "",
             releaseDate: releaseDate || null,
-            tags: tags ? tags.split(',').map(t => t.trim()) : [],
-            featured: featured === 'on',
-            stock: stock ? parseInt(stock) : 0
+            tags: tags ? tags.split(",").map(t => t.trim()) : [],
+            featured: featured === "on",
+            stock: stock ? parseInt(stock) : 0,
+            images
         });
 
-
-        // Generar slug(url mas bonita)
         product.slug = product.generateSlug();
-
         await product.save();
 
-        req.flash('success_msg', 'Producto creado exitosamente');
-        res.redirect('/admin/products');
+        req.flash("success_msg", "Producto creado exitosamente");
+        res.redirect("/admin/products");
 
-    } catch (error) {
-        console.error(error);
-
-        let errorMsg = 'Error al crear el producto';
-        // codigo 11000 error de mongodb ("clave duplicada" )
-        if (err.code === 11000) {
-            errorMsg = 'Ya existe un producto con ese título';
-        }
-
-        res.render('admin/product_form', {
-            title: 'Crear Producto',
+    } catch (err) {
+        console.error("❌ Error creando producto:", err);
+        res.render("admin/product_form", {
+            title: "Crear Producto",
             product: req.body,
             platforms: PLATFORMS,
-            errors: [{ msg: errorMsg }]
+            errors: [{ msg: "Error al crear el producto" }]
         });
     }
 };
+
 
 
 // ========================================
@@ -194,6 +190,14 @@ exports.product_update_get = async (req, res, next) => {
         if (!product) {
             req.flash('error_msg', 'Producto no encontrado')
             return res.redirect('/admin/products');
+        }
+        if (product.tags && !Array.isArray(product.tags)) {
+            product.tags = Array.isArray(product.tags) ? product.tags : [];
+        }
+
+        // Si tags es array, conviértelo a string para el input
+        if (Array.isArray(product.tags)) {
+            product.tagsString = product.tags.join(', ');
         }
 
         res.render('admin/product_form', {
@@ -209,47 +213,35 @@ exports.product_update_get = async (req, res, next) => {
 };
 
 
-
-
-// ========================================
-// PROCESAR EDITAR PRODUCTO
-// ========================================
-exports.product_update_post = async (req, res, next) => {
+exports.product_update_post = async (req, res) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-        return res.render('admin/product_form', {
-            title: 'Editar producto',
+        return res.render("admin/product_form", {
+            title: "Editar producto",
             product: { _id: req.params.id, ...req.body },
             platforms: PLATFORMS,
             errors: errors.array()
         });
     }
 
-    const {
-        title,
-        description,
-        price,
-        discount,
-        platform,
-        genre,
-        developer,
-        publisher,
-        releaseDate,
-        tags,
-        featured,
-        stock
-    } = req.body;
-
     try {
         const product = await Product.findById(req.params.id);
-
         if (!product) {
-            req.flash('error_msg', 'Producto no encontrado');
-            return res.redirect('/admin/products');
+            req.flash("error_msg", "Producto no encontrado");
+            return res.redirect("/admin/products");
         }
 
-        // Actualizar campos
+        const {
+            title, description, price, discount, platform,
+            genre, developer, publisher, releaseDate,
+            tags, featured, stock, deleteThumbnail,
+            deleteCover, deleteScreenshots
+        } = req.body;
+
+        // ========================================
+        // ACTUALIZAR CAMPOS BÁSICOS
+        // ========================================
         product.title = title;
         product.slug = product.generateSlug();
         product.description = description;
@@ -257,32 +249,157 @@ exports.product_update_post = async (req, res, next) => {
         product.discount = discount ? parseFloat(discount) : 0;
         product.platform = Array.isArray(platform) ? platform : [platform];
         product.genre = genre ? (Array.isArray(genre) ? genre : [genre]) : [];
-        product.developer = developer || '';
-        product.publisher = publisher || '';
+        product.developer = developer || "";
+        product.publisher = publisher || "";
         product.releaseDate = releaseDate || null;
-        product.tags = tags ? tags.split(',').map(t => t.trim()) : [];
-        product.featured = featured === 'on';
+        product.tags = tags ? tags.split(",").map(t => t.trim()) : [];
+        product.featured = featured === "on";
         product.stock = stock ? parseInt(stock) : 0;
 
+        // ========================================
+        // ELIMINAR IMÁGENES (Si el usuario marca eliminar)
+        // ========================================
+        if (deleteThumbnail === "on" && product.images?.thumbnail?.public_id) {
+            try {
+                await deleteCloudinaryImage(product.images.thumbnail.public_id);
+                product.images.thumbnail = {
+                    url: "/images/placeholder-game.jpg",
+                    public_id: null
+                };
+            } catch (err) {
+                console.error('❌ Error eliminando thumbnail:', err);
+            }
+        }
+
+        if (deleteCover === "on" && product.images?.cover?.public_id) {
+            try {
+                await deleteCloudinaryImage(product.images.cover.public_id);
+                product.images.cover = {
+                    url: "/images/placeholder-game.jpg",
+                    public_id: null
+                };
+            } catch (err) {
+                console.error('❌ Error eliminando cover:', err);
+            }
+        }
+
+        if (deleteScreenshots && product.images?.screenshots?.length) {
+            const toDelete = Array.isArray(deleteScreenshots)
+                ? deleteScreenshots
+                : [deleteScreenshots];
+
+            for (const publicId of toDelete) {
+                try {
+                    await deleteCloudinaryImage(publicId);
+                } catch (err) {
+                    console.error(`❌ Error eliminando screenshot ${publicId}:`, err);
+                }
+            }
+
+            product.images.screenshots = product.images.screenshots.filter(
+                img => !toDelete.includes(img.public_id)
+            );
+        }
+
+        // ========================================
+        // SUBIR NUEVAS IMÁGENES
+        // ========================================
+
+        // HELPER: Normalizar imagen (asegurar que es objeto con url y public_id)
+        const normalizeImage = (imgData) => {
+            if (!imgData) return null;
+
+            // Si ya es un objeto con url, devolverlo
+            if (imgData.url && imgData.public_id) {
+                return imgData;
+            }
+
+            // Si es un objeto con secure_url (de Cloudinary)
+            if (imgData.secure_url && imgData.public_id) {
+                return {
+                    url: imgData.secure_url,
+                    public_id: imgData.public_id
+                };
+            }
+
+            // Si es un string (URL), devolver con public_id null
+            if (typeof imgData === 'string') {
+                return {
+                    url: imgData,
+                    public_id: null
+                };
+            }
+
+            return null;
+        };
+
+        // Thumbnail
+        if (req.cloudinaryFiles?.thumbnail?.[0]) {
+            try {
+                if (product.images?.thumbnail?.public_id) {
+                    await deleteCloudinaryImage(product.images.thumbnail.public_id);
+                }
+
+                const normalizedImg = normalizeImage(req.cloudinaryFiles.thumbnail[0]);
+                if (normalizedImg) {
+                    product.images.thumbnail = normalizedImg;
+                    console.log('✅ Thumbnail actualizado:', normalizedImg);
+                }
+            } catch (err) {
+                console.error('❌ Error actualizando thumbnail:', err);
+                req.flash('error_msg', 'Error al actualizar thumbnail');
+            }
+        }
+
+        // Cover
+        if (req.cloudinaryFiles?.cover?.[0]) {
+            try {
+                if (product.images?.cover?.public_id) {
+                    await deleteCloudinaryImage(product.images.cover.public_id);
+                }
+
+                const normalizedImg = normalizeImage(req.cloudinaryFiles.cover[0]);
+                if (normalizedImg) {
+                    product.images.cover = normalizedImg;
+                    console.log('✅ Cover actualizado:', normalizedImg);
+                }
+            } catch (err) {
+                console.error('❌ Error actualizando cover:', err);
+                req.flash('error_msg', 'Error al actualizar cover');
+            }
+        }
+
+        // Screenshots
+        if (req.cloudinaryFiles?.screenshots?.length) {
+            try {
+                const normalizedScreenshots = req.cloudinaryFiles.screenshots
+                    .map(img => normalizeImage(img))
+                    .filter(img => img !== null);
+
+                if (normalizedScreenshots.length > 0) {
+                    product.images.screenshots.push(...normalizedScreenshots);
+                    console.log('✅ Screenshots agregados:', normalizedScreenshots.length);
+                }
+            } catch (err) {
+                console.error('❌ Error actualizando screenshots:', err);
+                req.flash('error_msg', 'Error al actualizar screenshots');
+            }
+        }
+
+        // ========================================
+        // GUARDAR
+        // ========================================
         await product.save();
 
-        req.flash('success_msg', 'Producto actualizado exitosamente');
-        res.redirect('/admin/products');
+        req.flash("success_msg", "Producto actualizado exitosamente");
+        res.redirect("/admin/products");
 
-
-    } catch (error) {
-        console.error(err);
-
-        res.render('admin/product_form', {
-            title: 'Editar Producto',
-            product: { _id: req.params.id, ...req.body },
-            platforms: PLATFORMS,
-            errors: [{ msg: 'Error al actualizar el producto' }]
-        });
+    } catch (err) {
+        console.error("❌ Error actualizando producto:", err);
+        req.flash("error_msg", `Error: ${err.message}`);
+        res.redirect("/admin/products");
     }
 };
-
-
 
 // ========================================
 // CONFIRMACIÓN ELIMINAR PRODUCTO (GET)
@@ -305,30 +422,54 @@ exports.product_delete_get = async (req, res, next) => {
     }
 };
 
-// ========================================
-// ELIMINAR PRODUCTO (POST)
-// ========================================
-exports.product_delete_post = async (req, res, next) => {
+exports.product_delete_post = async (req, res) => {
     try {
         const product = await Product.findById(req.params.id);
 
         if (!product) {
-            req.flash('error_msg', 'Producto no encontrado');
-            return res.redirect('/admin/products');
+            req.flash("error_msg", "Producto no encontrado");
+            return res.redirect("/admin/products");
         }
+
+        // Eliminar imágenes de Cloudinary
+        const imagesToDelete = [];
+
+        if (product.images?.thumbnail?.public_id) {
+            imagesToDelete.push(product.images.thumbnail.public_id);
+        }
+
+        if (product.images?.cover?.public_id) {
+            imagesToDelete.push(product.images.cover.public_id);
+        }
+
+        if (product.images?.screenshots?.length) {
+            product.images.screenshots.forEach(img => {
+                if (img.public_id) imagesToDelete.push(img.public_id);
+            });
+        }
+
+        // Eliminar todas las imágenes
+        for (const publicId of imagesToDelete) {
+            try {
+                await deleteCloudinaryImage(publicId);
+            } catch (err) {
+                console.error(`⚠️ Error eliminando ${publicId}:`, err);
+                // Continuar aunque falle una
+            }
+        }
+
 
         await Product.findByIdAndDelete(req.params.id);
 
-        req.flash('success_msg', `Producto "${product.title}" eliminado exitosamente`);
-        res.redirect('/admin/products');
+        req.flash("success_msg", `Producto "${product.title}" eliminado`);
+        res.redirect("/admin/products");
 
     } catch (err) {
-        console.error(err);
-        req.flash('error_msg', 'Error al eliminar el producto');
-        res.redirect('/admin/products');
+        console.error("❌ Error eliminando producto:", err);
+        req.flash("error_msg", "Error al eliminar producto");
+        res.redirect("/admin/products");
     }
 };
-
 
 
 // ========================================
@@ -455,6 +596,12 @@ exports.product_detail_get = async (req, res, next) => {
             .select('title slug price finalPrice images platform')
             .exec();
 
+        console.log('DEBUG product.images (first product or current product):', product.images);
+        console.log('DEBUG types:', {
+            thumbnail: typeof product.images?.thumbnail,
+            cover: typeof product.images?.cover,
+            screenshots: Array.isArray(product.images?.screenshots) ? product.images.screenshots.map(s => typeof s) : typeof product.images?.screenshots
+        });
         res.render('products/detail', {
             product,
             relacionados
