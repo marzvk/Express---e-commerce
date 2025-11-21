@@ -3,6 +3,11 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 const { PLATFORMS } = require('../../config/platforms')
 
+const ImageSchema = new mongoose.Schema({
+  url: { type: String, required: false },
+  public_id: { type: String, required: false }
+});
+
 const ProductSchema = new Schema({
   title: {
     type: String,
@@ -64,14 +69,23 @@ const ProductSchema = new Schema({
 
   images: {
     thumbnail: {
-      type: String,
-      default: '/images/placeholder-game.jpg'
+      type: ImageSchema,
+      default: {
+        url: "/images/placeholder-game.jpg",
+        public_id: null
+      }
     },
     cover: {
-      type: String,
-      default: '/images/placeholder-game.jpg'
+      type: ImageSchema,
+      default: {
+        url: "/images/placeholder-game.jpg",
+        public_id: null
+      }
     },
-    screenshots: [String]
+    screenshots: {
+      type: [ImageSchema],
+      default: []
+    }
   },
 
   tags: [String],
