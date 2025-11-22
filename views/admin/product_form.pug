@@ -14,7 +14,7 @@ block content
               each error in errors 
                 li= error.msg
 
-        form(action=product && product._id ? `/admin/products/${product._id}/edit` : '/admin/products/create' , method="post")     
+        form(action=product && product._id ? `/admin/products/${product._id}/edit` : '/admin/products/create' , method="post", enctype='multipart/form-data')     
           .mb-3 
             label.form-label(for='title') Titulo 
             input.form-control#title(
@@ -70,6 +70,65 @@ block content
                   )
                   label.form-check-label(for=`platform_${plataform}`)= plataform 
 
+          hr.my-4
+          h4.mb-3 📸 Imágenes del Producto
+          
+          .row
+            //- Thumbnail
+            .col-md-4
+              .mb-3
+                label.form-label Miniatura (Thumbnail)
+                input.form-control(type='file' name='thumbnail' accept='image/*')
+                small.text-muted Para el catálogo (800x600)
+                
+                if product && product.images && product.images.thumbnail && !product.images.thumbnail.url.includes('placeholder')
+                  .mt-2
+                    p.small.mb-1 Imagen actual:
+                    img.img-thumbnail(src=product.images.thumbnail.url alt='Thumbnail' style='max-width: 150px;')
+                    .form-check.mt-1
+                      input.form-check-input(type='checkbox' name='deleteThumbnail' id='deleteThumbnail')
+                      label.form-check-label(for='deleteThumbnail') Eliminar imagen actual
+            
+            //- Cover
+            .col-md-4
+              .mb-3
+                label.form-label Portada (Cover)
+                input.form-control(type='file' name='cover' accept='image/*')
+                small.text-muted Para la página de detalle (800x600)
+                
+                if product && product.images && product.images.cover && !product.images.cover.url.includes('placeholder')
+                  .mt-2
+                    p.small.mb-1 Imagen actual:
+                    img.img-thumbnail(src=product.images.cover alt='Cover' style='max-width: 150px;')
+                    .form-check.mt-1
+                      input.form-check-input(type='checkbox' name='deleteCover' id='deleteCover')
+                      label.form-check-label(for='deleteCover') Eliminar imagen actual
+            
+            //- Screenshots
+            .col-md-4
+              .mb-3
+                label.form-label Screenshots (hasta 5)
+                input.form-control(type='file' name='screenshots' accept='image/*' multiple)
+                small.text-muted Galería de imágenes
+                
+                if product && product.images && product.images.screenshots && product.images.screenshots.length > 0
+                  .mt-2
+                    p.small.mb-1 Screenshots actuales:
+                    .row.g-2
+                      each screenshot, index in product.images.screenshots
+                        .col-6
+                          img.img-thumbnail(src=screenshot alt=`Screenshot ${index + 1}` style='max-width: 100px;')
+                          .form-check.mt-1
+                            input.form-check-input(type='checkbox' name='deleteScreenshots' value=screenshot)
+                            label.form-check-label.small Eliminar
+          
+          .alert.alert-info.mt-3
+            strong 💡 Consejos:
+            ul.mb-0.small
+              li Si no subes nuevas imágenes, se mantienen las actuales
+              li Formatos permitidos: JPG, PNG, WEBP
+              li Peso máximo: 5MB por imagen
+
           .mb-3
             label.form-label(for="genre") Generos 
             select.form-select#genre(
@@ -124,7 +183,7 @@ block content
               type='text'
               name='tags'
               placeholder='Ej: open-world, ofertas, liquidación'
-              value=product && product.tags ? product.tags.join(', ') : ''
+              value=product && product.tagsString ? product.tagsString : ''
             )
 
           .mb-3.form-check 
