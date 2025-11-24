@@ -2,7 +2,7 @@ extends ../layout
 
 block content 
   .container.my-4
-    .row.col-md-3.card
+    .row.col-md-3.card.mb-3
       nav(aria-label='breadcrumb')
         ol.breadcrumb.justify-content-center
           li.breadcrumb-item
@@ -16,27 +16,40 @@ block content
       .col-md-6
         //- Imagen principal
         if product.images && product.images.cover
-          img.img-fluid.rounded.mb-3(
-            src=product.images.cover 
+          img.img-fluid.rounded.mb-3.product-cover-image(
+            src=product.images.cover.url 
             alt=product.title
-            style='width: 100%; height: 400px; object-fit: cover;'
           )
         else
-          .bg-secondary.text-white.d-flex.align-items-center.justify-content-center.rounded.mb-3(
-            style='width: 100%; height: 400px;'
-          )
+          .bg-secondary.text-white.d-flex.align-items-center.justify-content-center.rounded.mb-3.product-no-image
             h3 Sin imagen
         
         //- Galería de screenshots (si existen)
         if product.images && product.images.screenshots && product.images.screenshots.length > 0
           .row.g-2
-            each screenshot in product.images.screenshots.slice(0, 4)
+            each screenshot, i in product.images.screenshots.slice(0, 4)
               .col-3
-                img.img-fluid.rounded(
-                  src=screenshot 
-                  alt='Screenshot'
-                  style='height: 80px; object-fit: cover; cursor: pointer;'
+                img.img-fluid.rounded.screenshot-thumb(
+                  src=screenshot.url
+                  alt=`Screenshot ${i + 1}`
+                  data-index=i
                 )
+    
+        //- Modal para screenshots
+        #screenshotsModal.modal.fade(tabindex='-1')
+          .modal-dialog.modal-lg
+            .modal-content
+              .modal-header
+                h5.modal-title Screenshots
+                button.btn-close(type='button' data-bs-dismiss='modal')
+              .modal-body
+                #screenshotsCarousel.carousel.slide(data-bs-ride='carousel')
+                  .carousel-inner
+                  button.carousel-control-prev(type='button' data-bs-target='#screenshotsCarousel' data-bs-slide='prev')
+                    span.carousel-control-prev-icon
+                  button.carousel-control-next(type='button' data-bs-target='#screenshotsCarousel' data-bs-slide='next')
+                    span.carousel-control-next-icon
+         
 
       //- Columna derecha: Información
       .col-md-6
@@ -160,7 +173,7 @@ block content
                 .card.h-100
                   if related.images && related.images.thumbnail
                     img.card-img-top(
-                      src=related.images.thumbnail 
+                      src=related.images.thumbnail.url 
                       alt=related.title
                       style='height: 150px; object-fit: cover;'
                     )
@@ -171,4 +184,7 @@ block content
                         span.badge.bg-secondary.me-1.small= platform
                     strong.text-success $#{related.finalPrice.toFixed(2)}
                   .card-footer.bg-white
-                    a.btn.btn-sm.btn-outline-primary.w-100(href=`/products/${related.slug}`) Ver
+                    a.btn.btn-sm.btn-outline-primary.w-100(href=`/products/${related.slug}`) Ver 
+
+block scripts
+  script(src='/javascripts/product-screenshots.js')                    

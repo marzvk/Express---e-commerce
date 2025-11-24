@@ -2,36 +2,108 @@ extends ../layout
 
 block content
   .container.my-4
-    h1.mb-4 Finalizar Compra
+    h1.mb-4 💳 Finalizar Compra
     
     .row
+      //- Resumen
       .col-md-8
         .card.mb-4
           .card-header
-            h5 Resumen de tu pedido
+            h5 📦 Resumen de tu pedido
           .card-body
             each item in cart
-              .d-flex.justify-content-between.mb-2
+              .d-flex.justify-content-between.align-items-center.mb-3.pb-3.border-bottom
                 div
                   strong= item.title
                   br
                   small.text-muted= item.platform
-                div
-                  strong #{item.quantity} x $#{item.finalPrice.toFixed(2)}
+                div.text-end
+                  small= item.quantity
+                  | x $
+                  strong= item.finalPrice.toFixed(2)
+              
+            .d-flex.justify-content-between.mt-4.pt-3.border-top
+              h5.mb-0 Total:
+              h4.mb-0.text-success= '$' + total.toFixed(2) + ' ARS'
       
+      //- Opciones de pago
       .col-md-4
-        .card
-          .card-header
-            h5 Total a pagar
+        //- OPCIÓN 1: MercadoPago (Real)
+        .card.mb-3
+          .card-header.bg-primary.text-white
+            h5.mb-0 💰 Pago Real
           .card-body
-            .d-flex.justify-content-between.mb-3
-              strong Total:
-              strong.fs-4.text-success $#{total.toFixed(2)}
+            p.small.mb-3
+              | Paga con tarjeta, efectivo o transferencia
+              br
+              strong Seguro y confiable
+            
+            //- Contenedor para MercadoPago Payment Brick
+            #mpContainer.mb-3
+              //- El botón se renderizará aquí
+            
+            .alert.alert-info.small
+              strong ✅ Métodos aceptados:
+              ul.mb-0.mt-2
+                li Tarjetas de crédito/débito
+                li Efectivo (Rapipago, Pago Fácil)
+                li Transferencia bancaria
+                li Mercado Pago
+
+            button#mpRedirectBtn.btn.btn-primary.w-100(type='button')
+              | 💳 Pagar con Mercado Pago
+        
+        //- OPCIÓN 2: Simulado (Testing/Admin)
+        .card.mb-3
+          .card-header.bg-secondary.text-white
+            h5.mb-0 🧪 Modo Testing
+          .card-body
+            p.small.mb-3
+              | Compra sin procesar pago
+              br
+              strong (Solo para desarrollo)
             
             form(method='POST' action='/checkout/process')
-              button.btn.btn-success.btn-lg.w-100(type='submit') 
-                | Confirmar compra (Simulado)
-              p.text-muted.small.text-center.mt-2 
-                | Por ahora es una compra simulada. 
-                br
-                | ¡Recibirás tus keys al instante!
+              button.btn.btn-secondary.w-100(type='submit')
+                | ⚡ Compra Simulada
+              p.text-muted.small.text-center.mt-2
+                | Las keys se entregan al instante
+        
+        //- Tarjetas de prueba
+        .alert.alert-warning.small
+          h6 🧪 Tarjetas de prueba:
+          strong Visa:
+          |  4509 9535 6623 3704
+          br
+          small Exp: cualquier futura | CVV: 123
+          hr.my-2
+          strong Mastercard:
+          |  5031 7557 3453 0604
+          br
+          small Exp: 11/25 | CVV: 123
+          hr.my-2
+          small Para rechazar: usa CVV 000
+
+
+
+  script.
+    console.log('🔄 Inicializando MercadoPago...');
+  
+    const publicKey = "#{mpPublicKey}";
+    const preferenceId = "#{preferenceId}";
+  
+    document.addEventListener('DOMContentLoaded', function () {
+      console.log('SDK cargado correctamente');
+  
+      // URL de redirección (Checkout PRO clásico)
+      const redirectURL = `https://www.mercadopago.com.ar/checkout/v1/redirect?preference-id=${preferenceId}`;
+  
+      // Cuando tocan el botón → redirige afuera
+      document.getElementById("mpRedirectBtn").addEventListener("click", () => {
+        console.log("➡ Redirigiendo a MercadoPago...");
+        window.location.href = redirectURL;
+      });
+    });
+
+
+  
