@@ -1,8 +1,9 @@
 const Product = require('../../models/e-commerce/products');
 const Key = require('../../models/e-commerce/key');
 const Order = require('../../models/e-commerce/order');
-const { preferenceClient, paymentClient } = require('../../config/mercadopago');
 
+const { preferenceClient, paymentClient } = require('../../config/mercadopago');
+const { sendOrderConfirmation, sendOrderPending } = require('../../utils/emailService');
 
 
 // ========================================
@@ -24,7 +25,7 @@ exports.checkout_get = async (req, res) => {
 
     const total = cart.reduce((sum, item) => sum + (item.finalPrice * item.quantity), 0);
 
-    
+
     // ITEMS CORRECTOS PARA MERCADO PAGO    
     const items = cart.map(item => ({
       title: item.title,
@@ -39,12 +40,12 @@ exports.checkout_get = async (req, res) => {
     console.log('🔑 Access Token:', process.env.MP_ACCESS_TOKEN ? '✅ Configurado' : '❌ Falta');
     console.log('💱 NODE_ENV:', process.env.NODE_ENV);
 
-    
+
     // PREFERENCIA CORRECTA    
     const preferenceData = {
       items,
       payer: {
-        name: process.env.NODE_ENV === "production" ? req.user.username : "TESTUSER3897848066350466353",
+        name: process.env.NODE_ENV === "production" ? req.user.username : "APRO TEST USER",
         email: process.env.NODE_ENV === "production" ? req.user.email : "test_user_123456@testuser.com",
         identification: {
           type: "DNI",
@@ -56,7 +57,7 @@ exports.checkout_get = async (req, res) => {
         failure: `${process.env.BASE_URL}/checkout/failure`,
         pending: `${process.env.BASE_URL}/checkout/pending`
       },
-      // auto_return: "approved",
+      auto_return: "approved",
       notification_url: `${process.env.BASE_URL}/webhook/mercadopago`,
       metadata: {
         user_id: req.user._id.toString(),
@@ -69,7 +70,11 @@ exports.checkout_get = async (req, res) => {
     console.log("📋 Enviando preferencia:", preferenceData);
 
     const response = await preferenceClient.create({
-      body: preferenceData
+      // body: preferenceData
+      body: {
+        ...preferenceData,
+        test: true
+      }
     });
 
     console.log("✅ Preferencia creada:", response.id);
@@ -185,6 +190,8 @@ exports.checkout_success = async (req, res) => {
     await order.save();
     console.log('✅ Orden creada:', order._id);
 
+    await sendOrderConfirmation(req.user._id, order._id);
+
     // Actualizar keys con referencia a la orden
     await Key.updateMany(
       { _id: { $in: productsWithKeys.map(p => p.key) } },
@@ -220,9 +227,97 @@ exports.checkout_failure = async (req, res) => {
 // PENDING - PAGO PENDIENTE
 // ========================================
 exports.checkout_pending = async (req, res) => {
-  console.log('⏳ Pago pendiente');
-  req.flash('info_msg', 'Tu pago está pendiente de aprobación. Te notificaremos pronto.');
-  res.redirect('/cart');
+  try {
+    const { payment_id } = req.query;
+
+    if (!payment_id) {
+      req.flash('info_msg', 'Pago pendiente de confirmación');
+      return res.redirect('/cart');
+    }
+
+    // Verificar si ya existe la orden
+    const existingOrder = await Order.findOne({ paymentId: payment_id });
+    if (existingOrder) {
+      req.flash('info_msg', 'Esta orden ya fue procesada');
+      return res.redirect(`/orders/${existingOrder._id}`);
+    }
+
+    // Obtener pago de MercadoPago
+    const payment = await paymentClient.get({ id: payment_id });
+
+    // Obtener carrito desde metadata
+    const cart = JSON.parse(payment.metadata?.cart || '[]');
+    const productsWithKeys = [];
+
+    // Asignar keys
+    for (const item of cart) {
+      for (let i = 0; i < item.quantity; i++) {
+        const key = await Key.findOneAndUpdate(
+          {
+            product: item.productId,
+            platform: item.platform,
+            status: 'available'
+          },
+          {
+            status: 'sold',
+            soldAt: new Date(),
+            assignedTo: req.user._id
+          },
+          { new: true }
+        );
+
+        if (!key) {
+          throw new Error(`Sin stock de ${item.title} para ${item.platform}`);
+        }
+
+        productsWithKeys.push({
+          product: item.productId,
+          title: item.title,
+          platform: item.platform,
+          price: item.price,
+          key: key._id
+        });
+      }
+    }
+
+    // Crear orden
+    const order = new Order({
+      user: req.user._id,
+      products: productsWithKeys,
+      total: payment.transaction_amount,
+      status: 'pending',
+      paymentMethod: 'mercadopago',
+      paymentId: payment_id,
+      paymentDetails: {
+        status: payment.status,
+        statusDetail: payment.status_detail,
+        paymentType: payment.payment_type_id,
+        paymentMethod: payment.payment_method_id
+      }
+    });
+
+    await order.save();
+
+    // Actualizar keys
+    await Key.updateMany(
+      { _id: { $in: productsWithKeys.map(p => p.key) } },
+      { order: order._id }
+    );
+
+    // Limpiar carrito
+    req.session.cart = [];
+
+    // Enviar email de pago pendiente
+    await sendOrderPending(req.user._id, order._id);
+
+    req.flash('info_msg', 'Tu pago está pendiente. Te notificaremos cuando sea aprobado.');
+    res.redirect(`/orders/${order._id}`);
+
+  } catch (err) {
+    console.error(err);
+    req.flash('error_msg', 'Error al procesar el pago pendiente');
+    res.redirect('/cart');
+  }
 };
 
 
