@@ -24,14 +24,22 @@ mongoose.connect(process.env.MONGODB_URI)
 
 app.use(helmet.contentSecurityPolicy({
   directives: {
-    "img-src": [
+    defaultSrc: ["'self'"],
+    imgSrc: [
       "'self'",
-      "cdn.pixabay.com",          // Dominio de Pixabay
-      "images.unsplash.com",      // Dominio de Unsplash
-      "data:"
+      "https://res.cloudinary.com",
+      "cdn.pixabay.com",
+      "images.unsplash.com",
+      "data:",
+      "blob:",
+      "https://http2.mlstatic.com",
+      "https://www.mercadolibre.com"
     ],
-    // "script-src": ["'self'", "cdn.jsdelivr.net", "'unsafe-inline'"],
-    // "style-src": ["'self'", "cdn.jsdelivr.net"],
+    scriptSrc: ["'self'", "cdn.jsdelivr.net", "'unsafe-inline'", "https://sdk.mercadopago.com"],
+    frameSrc: ["https://www.mercadopago.com.ar", "https://www.mercadopago.com", "https://www.mercadolibre.com", "https://mercadopago.com.ar", 'https://sandbox.mercadopago.com.ar/'],
+    connectSrc: ["'self'", "https://api.mercadopago.com", "https://cdn.jsdelivr.net", "https://api.mercadolibre.com", "https://www.mercadolibre.com"],
+    styleSrc: ["'self'", "cdn.jsdelivr.net", "'unsafe-inline'"],
+    fontSrc: ["'self'", "cdn.jsdelivr.net", "fonts.googleapis.com", "fonts.gstatic.com"]
   },
 }));
 app.use(compression());
@@ -132,8 +140,8 @@ app.use((req, res, next) => {
 // MIDDLEWARES GENERALES
 // ========================================
 app.use(logger('dev'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -154,6 +162,7 @@ const productRouter = require('./routes/e-commerce/products');
 const cartRoutes = require('./routes/e-commerce/cart');
 const checkoutRoutes = require('./routes/e-commerce/checkout');
 const orderRoutes = require('./routes/e-commerce/orders');
+const webhookRoutes = require('./routes/e-commerce/webhook');
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
@@ -165,6 +174,7 @@ app.use('/products', productRouter);
 app.use('/cart', cartRoutes);
 app.use('/checkout', checkoutRoutes);
 app.use('/orders', orderRoutes);
+app.use('/webhook', webhookRoutes);
 
 
 // ========================================

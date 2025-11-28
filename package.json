@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",
+    "cloudinary": "^2.8.0",
     "compression": "^1.8.1",
     "connect-flash": "^0.1.1",
     "connect-mongo": "^5.1.0",
@@ -24,10 +25,14 @@
     "express-validator": "^7.2.1",
     "helmet": "^8.1.0",
     "http-errors": "~1.6.3",
+    "mercadopago": "^2.10.0",
     "method-override": "^3.0.0",
     "mongodb": "^6.20.0",
     "mongoose": "^8.19.1",
     "morgan": "^1.10.1",
+    "multer": "^2.0.2",
+    "node-fetch": "^3.3.2",
+    "nodemailer": "^7.0.10",
     "passport": "^0.7.0",
     "passport-local": "^1.0.0",
     "pug": "^3.0.3"

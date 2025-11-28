@@ -193,3 +193,35 @@ a.nav-link:hover {
   font-size: 1.4rem;
   margin-right: 6px;
 }
+
+/* Imagen de portada del producto */
+.product-cover-image {
+  width: 100%;
+  height: 400px;
+  object-fit: cover;
+}
+
+/* Placeholder cuando no hay imagen */
+.product-no-image {
+  width: 100%;
+  height: 400px;
+}
+
+/* Thumbnails de screenshots */
+.screenshot-thumb {
+  height: 80px;
+  object-fit: cover;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.screenshot-thumb:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+/* Imagen en el modal carousel */
+.carousel-screenshot {
+  max-height: 500px;
+  object-fit: contain;
+}
