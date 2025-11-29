@@ -37,7 +37,7 @@ const OrderSchema = new Schema({
 
     paymentMethod: {
         type: String,
-        enum: ['simulated', 'stripe'],
+        enum: ['simulated', 'stripe', 'mercadopago'],
         default: 'simulated'
     },
 
