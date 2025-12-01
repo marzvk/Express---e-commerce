@@ -3,6 +3,10 @@ const router = express.Router();
 const productController = require('../../controllers/e-commerce/productController');
 const { ensureAdmin, ensureAuthenticated } = require('../../middleware/auth');
 
+// const { uploadProduct } = require('../../config/multer');
+const { uploadProduct, uploadToCloudinaryMultiple } = require('../../middleware/upload');
+
+
 // ========================================
 // PARA TODAS LAS RUTAS REQUIERE SER ADMIN
 // ========================================
@@ -16,8 +20,6 @@ router.get('/', productController.admin_dashboard);
 
 
 
-
-
 // ========================================
 // LISTAR PRODUCTOS (Admin)
 // ========================================
@@ -28,11 +30,19 @@ router.get('/products', productController.admin_product_list);
 // ========================================
 // GET - Mostrar formulario
 router.get('/products/create', productController.product_create_get);
+
 // POST - Procesar info
 router.post('/products/create',
-    productController.validateProduct, // middleware
+    uploadProduct.fields([
+        { name: 'thumbnail', maxCount: 1 },
+        { name: 'cover', maxCount: 1 },
+        { name: 'screenshots', maxCount: 5 }
+    ]),
+    uploadToCloudinaryMultiple,
+    productController.validateProduct,
     productController.product_create_post
 );
+
 
 // ========================================
 // EDITAR PRODUCTO
@@ -41,9 +51,16 @@ router.post('/products/create',
 router.get('/products/:id/edit', productController.product_update_get);
 // POST - Procesar edit
 router.post('/products/:id/edit',
-    productController.validateProduct, // Middleware
+    uploadProduct.fields([
+        { name: 'thumbnail', maxCount: 1 },
+        { name: 'cover', maxCount: 1 },
+        { name: 'screenshots', maxCount: 5 }
+    ]),
+    uploadToCloudinaryMultiple,
+    productController.validateProduct,
     productController.product_update_post
 );
+
 
 // ========================================
 // ELIMINAR PRODUCTO
