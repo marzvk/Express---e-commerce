@@ -524,7 +524,50 @@ exports.admin_dashboard = async (req, res, next) => {
         ]);
 
 
+        // Ventas por mes (last 6)
+        const sixMonthsAgo = new Date();
+        sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
+        const monthlySales = await Order.aggregate([
+            {
+                $match: {
+                    status: 'completed',
+                    createdAt: { $gte: sixMonthsAgo }
+                }
+            },
+            {
+                $group: {
+                    _id: {
+                        year: { $year: '$createdAt' },
+                        month: { $month: '$createdAt' }
+                    },
+                    total: { $sum: '$total' },
+                    count: { $sum: 1 }
+                }
+            },
+            { $sort: { '_id.year': 1, '_id.month': 1 } }
+        ]);
+
+        // Formatear datos para el gráfico
+        const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+        const chartData = monthlySales.map(m => ({
+            month: `${months[m._id.month - 1]} ${m._id.year}`,
+            total: m.total,
+            count: m.count
+        }));
+
+        // Ultimas ordenes
+        const recentOrders = await Order.find()
+            .sort({ createdAt: -1 })
+            .limit(5)
+            .populate('user', 'username email')
+            .exec();
+
+        // Productos con stock bajo (esta al inicio, por ahora queda)
+        const lowStockProducts = await Product.find({ stock: { $lt: 10 } })
+            .select('title stock platform')
+            .limit(5)
+            .exec();
 
 
         res.render('admin/dashboard', {
@@ -533,8 +576,16 @@ exports.admin_dashboard = async (req, res, next) => {
                 totalProducts,
                 activeProducts,
                 lowStock,
-                outOfStock
-            }
+                outOfStock,
+                totalOrders,
+                completedOrders,
+                totalRevenue,
+                thisMonthRevenue
+            },
+            topProducts,
+            chartData,
+            recentOrders,
+            lowStockProducts
         });
     } catch (err) {
         return next(err);
