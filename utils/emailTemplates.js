@@ -113,3 +113,87 @@ exports.orderConfirmationHTML = (user, order, keys) => {
 </html>
     `;
 };
+
+exports.welcomeEmail = (user) => {
+    return `
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; background: #f5f5f5; }
+        .header { 
+            background: linear-gradient(135deg, #009ee3 0%, #0bb8e8 100%); 
+            color: white; 
+            padding: 30px; 
+            text-align: center;
+            border-radius: 10px 10px 0 0;
+        }
+        .content { background: white; padding: 30px; border-radius: 0 0 10px 10px; }
+        .button {
+            display: inline-block;
+            padding: 12px 30px;
+            background: #009ee3;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>¡Bienvenido a GameKeys Store! 🎮</h1>
+        </div>
+        <div class="content">
+            <p>Hola <strong>${user.username}</strong>,</p>
+            <p>¡Gracias por registrarte! Ahora puedes explorar nuestro catálogo y comprar tus juegos favoritos con entrega inmediata.</p>
+            <p>Aceptamos todos los métodos de pago de <strong style="color: #009ee3;">Mercado Pago</strong> para tu comodidad.</p>
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="${process.env.BASE_URL}/products" class="button">
+                    Explorar Catálogo
+                </a>
+            </div>
+            <p>¡Feliz gaming! 🎮</p>
+        </div>
+    </div>
+</body>
+</html>
+    `;
+};
+
+exports.orderPendingHTML = (user, order) => {
+    return `
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; background: #f5f5f5; }
+        .header { 
+            background: linear-gradient(135deg, #ffa000 0%, #ff8f00 100%); 
+            color: white; 
+            padding: 30px; 
+            text-align: center;
+            border-radius: 10px 10px 0 0;
+        }
+        .content { background: white; padding: 30px; border-radius: 0 0 10px 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⏳ Pago Pendiente</h1>
+            <p>Orden #${order._id.toString().slice(-8).toUpperCase()}</p>
+        </div>
+        <div class="content">
+            <p>Hola <strong>${user.username}</strong>,</p>
+            <p>Tu pago está pendiente de aprobación. Esto puede suceder cuando pagas en efectivo o con otros métodos que requieren confirmación.</p>
+            <p><strong>Te notificaremos por email cuando tu pago sea aprobado y recibas tus claves.</strong></p>
+            <p>Total: <strong>$${order.total.toFixed(2)} ARS</strong></p>
+        </div>
+    </div>
+</body>
+</html>
+    `;
+};
