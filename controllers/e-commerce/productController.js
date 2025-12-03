@@ -2,6 +2,7 @@
 const platforms = require('../../config/platforms');
 const { PLATFORMS } = require('../../config/platforms');
 const Product = require('../../models/e-commerce/products');
+const Order = require('../../models/e-commerce/order');
 const { validationResult, body, escape } = require('express-validator');
 
 const { deleteCloudinaryImage } = require('../../utils/cloudinaryHelper');
@@ -481,6 +482,50 @@ exports.admin_dashboard = async (req, res, next) => {
         const activeProducts = await Product.countDocuments({ active: true });
         const lowStock = await Product.countDocuments({ stock: { $lt: 10 } });
         const outOfStock = await Product.countDocuments({ stock: 0 });
+
+        // Estadisticas ventas
+        const totalOrders = await Order.countDocuments();
+        const completedOrders = await Order.countDocuments({ status: 'completed' });
+
+        const salesData = await Order.aggregate([
+            { $match: { status: 'completed' } },
+            { $group: { _id: null, total: { $sum: '$total' } } }
+        ]);
+        const totlRevenue = salesData.length > 0 ? salesData[0].total : 0;
+
+        // Ventas del mes
+        const firstDayOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+
+        const monthlyRevenue = await Order.aggregate([
+            {
+                $match: {
+                    status: 'completed',
+                    createdAt: { $gte: firstDayOfMonth }
+                }
+            },
+            { $group: { _id: null, total: { $sum: '$total' } } }
+        ]);
+        const thisMonthRevenue = monthlyRevenue.length > 0 ? monthlyRevenue[0].total : 0;
+
+        // Top 5 prod mas vendidos
+        const topProducts = await Order.aggregate([
+            { $match: { status: 'completed' } },
+            { $unwind: '$products' }, // separa cada prod en su propia fila
+            {
+                $group: {
+                    _id: '$products.product',
+                    title: { $first: '$products.title' },
+                    count: { $sum: 1 },
+                    revenue: { $sum: '$products.price' }
+                }
+            },
+            { $sort: { count: -1 } },
+            { $limit: 5 }
+        ]);
+
+
+
+
 
         res.render('admin/dashboard', {
             title: 'Panel de Administración',
