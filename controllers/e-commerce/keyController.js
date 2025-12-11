@@ -91,3 +91,81 @@ exports.upload_form = async (req, res, next) => {
     }
 };
 
+
+// ========================================
+// PROCESAR UPLOAD CSV
+// ========================================
+exports.upload_csv = async (req, res) => {
+    try {
+        if (!req.file) {
+            req.flash('error_msg', 'No se seleccionó ningún archivo');
+            return res.redirect('/admin/keys/upload');
+        }
+
+        const keys = [];
+        let errors = [];
+
+        // Leer CSV
+        fs.createReadStream(req.file.path)
+            .pipe(csv())
+            .on('data', (row) => {
+                // Validar datos
+                if (!row.product_id || !row.platform || !row.key) {
+                    errors.push(`Fila inválida: faltan campos`);
+                    return;
+                }
+
+                keys.push({
+                    product: row.product_id.trim(),
+                    platform: row.platform.trim(),
+                    key: row.key.trim(),
+                    status: 'available',
+                    uploadedAt: new Date()
+                });
+            })
+            .on('end', async () => {
+                try {
+                    // Eliminar archivo temporal
+                    fs.unlinkSync(req.file.path);
+
+                    if (errors.length > 0) {
+                        req.flash('error_msg', errors.join(', '));
+                        return res.redirect('/admin/keys/upload');
+                    }
+
+                    if (keys.length === 0) {
+                        req.flash('error_msg', 'El CSV está vacío o no tiene formato correcto');
+                        return res.redirect('/admin/keys/upload');
+                    }
+
+                    // Insertar keys
+                    await Key.insertMany(keys);
+
+                    // Actualizar stock de productos
+                    const productCounts = {};
+                    keys.forEach(k => {
+                        productCounts[k.product] = (productCounts[k.product] || 0) + 1;
+                    });
+
+                    for (const [productId, count] of Object.entries(productCounts)) {
+                        await Product.findByIdAndUpdate(productId, {
+                            $inc: { stock: count }
+                        });
+                    }
+
+                    req.flash('success_msg', `${keys.length} keys cargadas exitosamente`);
+                    res.redirect('/admin/keys');
+
+                } catch (err) {
+                    console.error(err);
+                    req.flash('error_msg', 'Error al guardar las keys');
+                    res.redirect('/admin/keys/upload');
+                }
+            });
+
+    } catch (err) {
+        console.error(err);
+        req.flash('error_msg', 'Error al procesar el archivo');
+        res.redirect('/admin/keys/upload');
+    }
+};
