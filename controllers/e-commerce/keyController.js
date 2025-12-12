@@ -169,3 +169,94 @@ exports.upload_csv = async (req, res) => {
         res.redirect('/admin/keys/upload');
     }
 };
+
+
+
+// ========================================
+// FORMULARIO AGREGAR KEY MANUAL
+// ========================================
+exports.key_create_get = async (req, res, next) => {
+    try {
+        const products = await Product.find({ active: true })
+            .select('title platform')
+            .sort({ title: 1 });
+
+        res.render('admin/key_form', {
+            title: 'Agregar Key Manual',
+            products
+        });
+    } catch (err) {
+        return next(err);
+    }
+};
+
+// ========================================
+// PROCESAR AGREGAR KEY MANUAL
+// ========================================
+exports.key_create_post = async (req, res) => {
+    try {
+        const { product, platform, key } = req.body;
+
+        if (!product || !platform || !key) {
+            req.flash('error_msg', 'Todos los campos son obligatorios');
+            return res.redirect('/admin/keys/create');
+        }
+
+        // Verificar que la key no exista
+        const existingKey = await Key.findOne({ key: key.trim() });
+        if (existingKey) {
+            req.flash('error_msg', 'Esta key ya existe en el sistema');
+            return res.redirect('/admin/keys/create');
+        }
+
+        // Crear key
+        const newKey = new Key({
+            product,
+            platform,
+            key: key.trim(),
+            status: 'available'
+        });
+
+        await newKey.save();
+
+        // Actualizar stock del producto
+        await Product.findByIdAndUpdate(product, { $inc: { stock: 1 } });
+
+        req.flash('success_msg', 'Key agregada exitosamente');
+        res.redirect('/admin/keys');
+
+    } catch (err) {
+        console.error(err);
+        req.flash('error_msg', 'Error al agregar la key');
+        res.redirect('/admin/keys/create');
+    }
+};
+
+// ========================================
+// REVOCAR KEY
+// ========================================
+exports.key_revoke = async (req, res) => {
+    try {
+        const key = await Key.findById(req.params.id);
+
+        if (!key) {
+            req.flash('error_msg', 'Key no encontrada');
+            return res.redirect('/admin/keys');
+        }
+
+        // Marcar como revocada
+        key.status = 'revoked';
+        await key.save();
+
+        // Reducir stock del producto
+        await Product.findByIdAndUpdate(key.product, { $inc: { stock: -1 } });
+
+        req.flash('success_msg', 'Key revocada exitosamente');
+        res.redirect('/admin/keys');
+
+    } catch (err) {
+        console.error(err);
+        req.flash('error_msg', 'Error al revocar la key');
+        res.redirect('/admin/keys');
+    }
+};
