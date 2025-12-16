@@ -54,3 +54,125 @@ exports.order_list = async (req, res, next) => {
         return next(err);
     }
 };
+
+// ========================================
+// DETALLE DE ORDEN (ADMIN)
+// ========================================
+exports.order_detail = async (req, res, next) => {
+    try {
+        const order = await Order.findById(req.params.id)
+            .populate('user', 'username email')
+            .populate('products.product')
+            .exec();
+
+        if (!order) {
+            req.flash('error_msg', 'Orden no encontrada');
+            return res.redirect('/admin/orders');
+        }
+
+        // Obtener las keys
+        const keysData = await Promise.all(
+            order.products.map(async (p) => {
+                const key = await Key.findById(p.key);
+                return {
+                    title: p.title,
+                    platform: p.platform,
+                    price: p.price,
+                    key: key ? key.key : 'Key no encontrada',
+                    keyStatus: key ? key.status : 'desconocido'
+                };
+            })
+        );
+
+        res.render('admin/orders_detail', {
+            title: `Orden #${order._id.toString().slice(-8).toUpperCase()}`,
+            order,
+            keys: keysData
+        });
+    } catch (err) {
+        return next(err);
+    }
+};
+
+// ========================================
+// REEMBOLSAR ORDEN (MERCADOPAGO)
+// ========================================
+exports.order_refund = async (req, res) => {
+    try {
+        const order = await Order.findById(req.params.id);
+
+        if (!order) {
+            req.flash('error_msg', 'Orden no encontrada');
+            return res.redirect('/admin/orders');
+        }
+
+        if (order.status === 'refunded') {
+            req.flash('error_msg', 'Esta orden ya fue reembolsada');
+            return res.redirect(`/admin/orders/${order._id}`);
+        }
+
+        if (order.status !== 'completed') {
+            req.flash('error_msg', 'Solo se pueden reembolsar órdenes completadas');
+            return res.redirect(`/admin/orders/${order._id}`);
+        }
+
+        // ========================================
+        // PROCESAR REEMBOLSO EN MERCADOPAGO
+        // ========================================
+        if (order.paymentMethod === 'mercadopago' && order.paymentId) {
+            try {
+                console.log(`💸 Procesando reembolso para pago: ${order.paymentId}`);
+
+                // Crear reembolso en MercadoPago
+                const refund = await paymentClient.refund({ id: order.paymentId });
+
+                console.log('✅ Reembolso procesado en MercadoPago:', refund.id);
+
+            } catch (mpError) {
+                console.error('❌ Error al procesar reembolso en MercadoPago:', mpError.message);
+                req.flash('error_msg', 'Error al procesar reembolso en MercadoPago: ' + mpError.message);
+                return res.redirect(`/admin/orders/${order._id}`);
+            }
+        }
+
+        // ========================================
+        // ACTUALIZAR ESTADO DE LA ORDEN
+        // ========================================
+        order.status = 'refunded';
+        await order.save();
+        console.log('✅ Orden actualizada a reembolsada:', order._id);
+
+        // ========================================
+        // LIBERAR LAS KEYS (volver a disponibles)
+        // ========================================
+        await Key.updateMany(
+            { _id: { $in: order.products.map(p => p.key) } },
+            {
+                status: 'available',
+                assignedTo: null,
+                soldAt: null,
+                order: null
+            }
+        );
+        console.log('✅ Keys liberadas');
+
+        // ========================================
+        // ACTUALIZAR STOCK DE PRODUCTOS
+        // ========================================
+        for (const item of order.products) {
+            await Product.findByIdAndUpdate(item.product, {
+                $inc: { stock: 1 }
+            });
+        }
+        console.log('✅ Stock actualizado');
+
+        req.flash('success_msg', 'Reembolso procesado exitosamente. Las keys fueron liberadas.');
+        res.redirect(`/admin/orders/${order._id}`);
+
+    } catch (err) {
+        console.error('❌ Error en order_refund:', err.message);
+        req.flash('error_msg', 'Error al procesar el reembolso');
+        res.redirect('/admin/orders');
+    }
+};
+
