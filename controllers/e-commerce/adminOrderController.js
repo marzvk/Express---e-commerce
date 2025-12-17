@@ -176,3 +176,36 @@ exports.order_refund = async (req, res) => {
     }
 };
 
+
+// ========================================
+// EXPORTAR ÓRDENES A CSV
+// ========================================
+exports.export_csv = async (req, res) => {
+    try {
+        const orders = await Order.find({ status: 'completed' })
+            .populate('user', 'username email')
+            .sort({ createdAt: -1 })
+            .exec();
+
+        // Crear CSV
+        let csv = 'Orden,Usuario,Email,Total,Fecha\n';
+
+        orders.forEach(order => {
+            csv += `${order._id},`;
+            csv += `${order.user ? order.user.username : 'N/A'},`;
+            csv += `${order.user ? order.user.email : 'N/A'},`;
+            csv += `${order.total},`;
+            csv += `${order.createdAt.toISOString()}\n`;
+        });
+
+        // Enviar archivo
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', 'attachment; filename=ordenes.csv');
+        res.send(csv);
+
+    } catch (err) {
+        console.error(err);
+        req.flash('error_msg', 'Error al exportar');
+        res.redirect('/admin/orders');
+    }
+};
