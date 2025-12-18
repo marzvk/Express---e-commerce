@@ -163,6 +163,8 @@ const cartRoutes = require('./routes/e-commerce/cart');
 const checkoutRoutes = require('./routes/e-commerce/checkout');
 const orderRoutes = require('./routes/e-commerce/orders');
 const webhookRoutes = require('./routes/e-commerce/webhook');
+const adminKeyRoutes = require('./routes/e-commerce/adminKeys');
+const adminOrdersRoutes = require('./routes/e-commerce/adminOrders');
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
@@ -175,6 +177,8 @@ app.use('/cart', cartRoutes);
 app.use('/checkout', checkoutRoutes);
 app.use('/orders', orderRoutes);
 app.use('/webhook', webhookRoutes);
+app.use('/admin/keys', adminKeyRoutes);
+app.use('/admin/orders', adminOrdersRoutes);
 
 
 // ========================================
