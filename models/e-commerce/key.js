@@ -52,7 +52,11 @@ const KeySchema = new Schema({
     }
 
 
-}, { timestamps: true });
+}, {
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
+});
 
 // Índice compuesto (carrito y checkout)
 KeySchema.index({ product: 1, platform: 1, status: 1 });

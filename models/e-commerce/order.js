@@ -43,6 +43,10 @@ const OrderSchema = new Schema({
 
     paymentId: String
 
-}, { timestamps: true });
+}, {
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
+});
 
 module.exports = mongoose.model('Order', OrderSchema);

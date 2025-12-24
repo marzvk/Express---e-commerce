@@ -491,7 +491,8 @@ exports.admin_dashboard = async (req, res, next) => {
             { $match: { status: 'completed' } },
             { $group: { _id: null, total: { $sum: '$total' } } }
         ]);
-        const totlRevenue = salesData.length > 0 ? salesData[0].total : 0;
+
+        const totalRevenue = salesData.length > 0 ? salesData[0].total : 0;
 
         // Ventas del mes
         const firstDayOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
